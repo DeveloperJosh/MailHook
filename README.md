@@ -14,5 +14,5 @@ You can get a mongo link [here](https://www.mongodb.com/)
 
 <h1 align="center">Contributors!</h1>
 <a href="https://github.com/Synterra-Technologies/SynTech/graphs/contributors">
-  <img src="https://contrib.rocks/image?repo=Synterra-Technologies/SynTech" />
+  <img src="https://contrib.rocks/image?repo=DeveloperJosh/Fish-Mail" />
 </a>
