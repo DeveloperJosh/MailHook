@@ -19,6 +19,8 @@ You can get a mongo link [here](https://www.mongodb.com/)
 <areply <message>
 <block <user>
 <unblock <user>
+<setprefix add <prefix>
+<setprefix remove <prefix>
 ```
 
 <h1 align="center">Contributors!</h1>
