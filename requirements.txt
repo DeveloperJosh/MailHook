@@ -1,0 +1,6 @@
+git+https://github.com/Rapptz/discord.py
+git+https://github.com/Gorialis/jishaku@master
+python-dotenv~=0.15.0
+pytimeparse==1.1.8
+pymongo~=3.11.3
+asyncio
