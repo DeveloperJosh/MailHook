@@ -53,11 +53,16 @@ class modmail(commands.Cog, description="Yes"):
             if b is not None:
                 return
             if e is None:
+                user = message.author
                 category = self.bot.get_channel(TICKET_CATEGORY)
                 channel = await guild.create_text_channel(name=f'ticket-{random.randint(0,1000)}', category=category, topic=message.author.id)
                 files = [await attachment.to_file() for attachment in message.attachments]
                 webhook = await self.get_webhook(channel.id)
                 await webhook.send(f"<@&{STAFF_ROLE}> {message.author.name} ({message.author.id}) has opened a ticket")
+                embed = discord.Embed(title="Info", color=discord.Color.green())
+                embed.set_thumbnail(url=message.author.display_avatar.url)
+                embed.description = f"Account created on {message.author.created_at.__format__('%d/%m/%y | %H:%M:%S')}"
+                await webhook.send(embed=embed)
                 await webhook.send(f"`{message.author.name}`: {message.content}", files=files)
                 db.modmail_collection.insert_one({"_id": channel.id, "guild_id": guild.id, "channel_user": message.author.id})
                 await message.channel.send("Our Staff will be with you soon!")
@@ -94,10 +99,11 @@ class modmail(commands.Cog, description="Yes"):
             await ctx.send('You need to add text')
         else:
             user = self.bot.get_user(int(ctx.channel.topic))
+            webhook = await self.get_webhook(ctx.channel.id)
             files = [await attachment.to_file() for attachment in ctx.message.attachments]
             await user.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {message_reply}", files=files)
             await ctx.message.delete()
-            await ctx.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {message_reply}")
+            await webhook.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {message_reply}", files=files)
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
@@ -106,10 +112,11 @@ class modmail(commands.Cog, description="Yes"):
             await ctx.send('You need to add text')
         else:
             user = self.bot.get_user(int(ctx.channel.topic))
+            webhook = await self.get_webhook(ctx.channel.id)
             files = [await attachment.to_file() for attachment in ctx.message.attachments]
             await user.send(f"{STAFF_EMOJI}`Staff Member`: {message_reply}", files=files)
             await ctx.message.delete()
-            await ctx.send(f"{STAFF_EMOJI}`Staff Member`: {message_reply}")
+            await webhook.send(f"{STAFF_EMOJI}`Staff Member`: {message_reply}", files=files)
 
     @commands.command()
     @commands.has_permissions(administrator=True)
