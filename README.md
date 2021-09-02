@@ -11,6 +11,17 @@ DATABASE_LINK=Mongo link
 
 You can get a mongo link [here](https://www.mongodb.com/)
 
+## Setting up config.py
+```py
+TICKET_CATEGORY=
+WELCOME_CHANNEL=
+GUILD_ID=
+STAFF_ROLE=
+MEMBER_ROLE=
+STAFF_EMOJI='<:staff:882711809461735495>'
+PREFIXES = ['<', '?']
+```
+
 ## Commands
 ```
 <close [reason]
