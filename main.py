@@ -5,7 +5,6 @@ import discord
 from discord.ext import commands
 from dotenv import load_dotenv
 from config import MyHelp, PREFIXES
-from utils.database import db
 
 
 intents = discord.Intents(messages=True, guilds=True, reactions=True, members=True, presences=True)
@@ -16,7 +15,7 @@ bot = commands.AutoShardedBot(
     case_insensitive=True,
     allowed_mentions=discord.AllowedMentions(everyone=False, roles=True, users=True, replied_user=True),
     strip_after_prefix=True,
-    help_command = MyHelp()
+    help_command=MyHelp()
 )
 logging.basicConfig(level=logging.INFO)
 bot.load_extension('jishaku')
