@@ -13,11 +13,11 @@ You can get a mongo link [here](https://www.mongodb.com/)
 
 ## Commands
 ```
-<close
-<reply <message>
-<areply <message>
-<block <user>
-<unblock <user>
+<close [reason]
+<reply [message]
+<areply [message]
+<block [user]
+<unblock [user]
 ```
 
 <h1 align="center">Contributors!</h1>
