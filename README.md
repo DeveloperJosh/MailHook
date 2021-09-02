@@ -6,8 +6,7 @@ Make a .env file, Just like this
 
 ```
 DISCORD_BOT_SECRET=Token here
-DATABASE_NAME=Mongo Name here
-DATABASE_PASS=Mongo Password here
+DATABASE_LINK=Mongo link
 ```
 
 You can get a mongo link [here](https://www.mongodb.com/)
@@ -19,8 +18,6 @@ You can get a mongo link [here](https://www.mongodb.com/)
 <areply <message>
 <block <user>
 <unblock <user>
-<setprefix add <prefix>
-<setprefix remove <prefix>
 ```
 
 <h1 align="center">Contributors!</h1>
