@@ -79,17 +79,24 @@ class modmail(commands.Cog, description="Yes"):
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
-    async def close(self, ctx):
+    async def close(self, ctx, reason=None):
         e = db.modmail_collection.find_one({"guild_id": ctx.guild.id, "channel_user": int(ctx.channel.topic)})
 
         if e is None:
             await ctx.send("User has no ticket")
 
-        else:
+        elif reason is None:
             a = db.modmail_collection.find_one({"guild_id": ctx.guild.id, "channel_user": int(ctx.channel.topic)})
             db.modmail_collection.delete_one(a)
             user = self.bot.get_user(int(ctx.channel.topic))
             await user.send(f"This ticket was closed by `{ctx.author.name}`")
+            await ctx.channel.delete()
+
+        else:
+            a = db.modmail_collection.find_one({"guild_id": ctx.guild.id, "channel_user": int(ctx.channel.topic)})
+            db.modmail_collection.delete_one(a)
+            user = self.bot.get_user(int(ctx.channel.topic))
+            await user.send(f"This ticket was closed for `{reason}`")
             await ctx.channel.delete()
 
     @commands.command()
