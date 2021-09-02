@@ -6,7 +6,7 @@ import asyncio
 
 import random
 from utils.database import db
-from config import TICKET_CATEGORY, GUILD_ID, STAFF_ROLE, MEMBER_ROLE, WELCOME_CHANNEL
+from config import TICKET_CATEGORY, GUILD_ID, STAFF_ROLE, MEMBER_ROLE, WELCOME_CHANNEL, STAFF_EMOJI
 
 
 class modmail(commands.Cog, description="Yes"):
@@ -29,6 +29,7 @@ class modmail(commands.Cog, description="Yes"):
     async def modmail_channel(self, message):
         guild = self.bot.get_guild(GUILD_ID)
         e = db.modmail_collection.find_one({"guild_id": guild.id, "channel_user": message.author.id})
+        b = db.collection.find_one({"_id": message.author.id})
         if message.author.bot:
          return
 
@@ -36,20 +37,26 @@ class modmail(commands.Cog, description="Yes"):
            return
 
         if type(message.channel) is discord.DMChannel:
+         if b is None:
+              pass
+         else:
+             return
          if e is None: 
           category = self.bot.get_channel(TICKET_CATEGORY)
-          overwrites = {message.author: discord.PermissionOverwrite(read_messages=True), guild.default_role: discord.PermissionOverwrite(read_messages=False), guild.get_role(STAFF_ROLE): discord.PermissionOverwrite(read_messages=True),}
-          channel = await guild.create_text_channel(name=f'ticket-{random.randint(0,1000)}', category=category, overwrites=overwrites, topic=message.author.id)
+          channel = await guild.create_text_channel(name=f'ticket-{random.randint(0,1000)}', category=category, topic=message.author.id)
           files = [await attachment.to_file() for attachment in message.attachments]
           await channel.send(f"<@&{STAFF_ROLE}> {message.author.name} ({message.author.id}) has opened a ticket")
           await channel.send(f"`{message.author.name}`: {message.content}", files=files)
           db.modmail_collection.insert_one({"_id": channel.id, "guild_id": guild.id, "channel_user": message.author.id})
           await message.channel.send("Our Staff will be with you soon!")
+
          else:
             r = db.modmail_collection.find_one({"guild_id": guild.id, "channel_user": message.author.id})
             channel = self.bot.get_channel(r['_id'])
             files = [await attachment.to_file() for attachment in message.attachments]
             await channel.send(f"`{message.author.name}`: {message.content}", files=files)
+            await message.channel.send("Message sent", delete_after=1)
+
         else:
             return
 
@@ -75,9 +82,10 @@ class modmail(commands.Cog, description="Yes"):
           await ctx.send('You need to add text')
       else:
         user = self.bot.get_user(int(ctx.channel.topic))
-        await user.send(f"`{ctx.author.name}`: {message_reply}")
+        files = [await attachment.to_file() for attachment in ctx.message.attachments]
+        await user.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {message_reply}", files=files)
         await ctx.message.delete()
-        await ctx.send(f"`{ctx.author.name}`: {message_reply}")
+        await ctx.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {message_reply}")
 
     @commands.command()
     @commands.has_permissions(manage_messages=True)
@@ -86,31 +94,47 @@ class modmail(commands.Cog, description="Yes"):
           await ctx.send('You need to add text')
       else:
         user = self.bot.get_user(int(ctx.channel.topic))
-        await user.send(f"`Staff Member`: {message_reply}")
+        files = [await attachment.to_file() for attachment in ctx.message.attachments]
+        await user.send(f"{STAFF_EMOJI}`Staff Member`: {message_reply}", files=files)
         await ctx.message.delete()
-        await ctx.send(f"`Staff Member`: {message_reply}")
+        await ctx.send(f"{STAFF_EMOJI}`Staff Member`: {message_reply}")
 
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def block(self, ctx, member: discord.Member):
+        e = db.collection.find_one({"_id": member.id})
+
+        if e is None:
+            blacklist = {"_id": member.id}
+            db.collection.insert_one(blacklist)
+            await member.send("You have been blocked you can no longer send messages to the mod mail")
+            await ctx.send(f"You have blacklisted {member.name}")
+
+        else:
+            await ctx.send(f"{member.name} is already blacklisted")
+
+    @commands.command()
+    @commands.has_permissions(administrator=True)
+    async def unblock(self, ctx, member: discord.Member):
+        e = db.collection.find_one({"_id": member.id})
+
+        if e is None:
+            await ctx.send(f"{member.name} is not blacklisted")
+
+        else:
+            a = db.collection.find_one({"_id": member.id})
+            db.collection.delete_one(a)
+            await member.send("You have been unblocked you can now send messages to the mod mail")
+            await ctx.send(f'{member.name} Has been unblacklisted')
 
     @close.error
     async def close_error(self, ctx: commands.Context, error: commands.CommandError):
-
-        if isinstance(error, commands.ConversionError):
-            message = str(error)
-        else:
-            print(f'{str(error)}')
-            message = "This is not a ticket channel"
-
+        message = "This is not a ticket channel"
         await ctx.send(message)
 
     @reply.error
     async def reply_error(self, ctx: commands.Context, error: commands.CommandError):
-
-        if isinstance(error, commands.ConversionError):
-            message = str(error)
-        else:
-            print(f'{str(error)}')
-            message = "This is not a ticket channel"
-
+        message = "This is not a ticket channel"
         await ctx.send(message)
 
 def setup(bot):
