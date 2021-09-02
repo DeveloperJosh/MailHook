@@ -13,12 +13,12 @@ You can get a mongo link [here](https://www.mongodb.com/)
 
 ## Setting up config.py
 ```py
-TICKET_CATEGORY=
-WELCOME_CHANNEL=
-GUILD_ID=
-STAFF_ROLE=
-MEMBER_ROLE=
-STAFF_EMOJI='<:staff:882711809461735495>'
+TICKET_CATEGORY=id here
+WELCOME_CHANNEL=id here
+GUILD_ID=id here
+STAFF_ROLE=id here
+MEMBER_ROLE=id here
+STAFF_EMOJI='yes'
 PREFIXES = ['<', '?']
 ```
 
