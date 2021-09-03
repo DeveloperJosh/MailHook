@@ -19,7 +19,7 @@ WELCOME_CHANNEL=#welcome channel id for the message
 GUILD_ID=#server id
 STAFF_ROLE=#staff role id
 MEMBER_ROLE=#the member role id
-STAFF_EMOJI='#put a emoji here'
+STAFF_EMOJI='emoji'
 PREFIXES=['<', '?']
 STATUS='My Dms'
 ```
