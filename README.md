@@ -25,10 +25,8 @@ You can get a mongo link [here](https://www.mongodb.com/)
 ## Setting up config.py
 ```py
 TICKET_CATEGORY=#category for the tickets
-WELCOME_CHANNEL=#welcome channel id for the message 
 GUILD_ID=#server id
 STAFF_ROLE=#staff role id
-MEMBER_ROLE=#the member role id
 STAFF_EMOJI='emoji'
 PREFIXES=['<', '?']
 STATUS='My Dms'
