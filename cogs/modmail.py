@@ -5,8 +5,7 @@ from discord.ext import commands
 from utils.database import db
 from typing import List
 from config import (
-    TICKET_CATEGORY, GUILD_ID, STAFF_ROLE,
-    MEMBER_ROLE, WELCOME_CHANNEL, STAFF_EMOJI
+    TICKET_CATEGORY, GUILD_ID, STAFF_ROLE, STAFF_EMOJI
 )
 import pymongo
 
@@ -18,14 +17,6 @@ class modmail(commands.Cog, description="Yes"):
     @commands.Cog.listener()
     async def on_ready(self):
         logging.info('ModMail is ready')
-
-    @commands.Cog.listener('on_member_join')
-    async def welcome(self, member: discord.Member):
-        role = member.guild.get_role(MEMBER_ROLE)
-        await member.add_roles(role)
-        embed = discord.Embed(title="Welcome", description=f"Welcome {member.name} have a great time!", color=discord.Color.blurple())
-        channel = self.bot.get_channel(WELCOME_CHANNEL)
-        await channel.send(embed=embed)
 
     async def get_webhook(self, channel_id: int) -> discord.Webhook:
         channel = self.bot.get_channel(channel_id)
@@ -52,6 +43,7 @@ class modmail(commands.Cog, description="Yes"):
 
         if type(message.channel) is discord.DMChannel:
             if b is not None:
+                await message.add_reaction('❌')
                 return
             if e is None:
                 user = message.author
@@ -59,17 +51,18 @@ class modmail(commands.Cog, description="Yes"):
                 channel = await guild.create_text_channel(name=f'ticket-{random.randint(0,1000)}', category=category, topic=message.author.id)
                 files = [await attachment.to_file() for attachment in message.attachments]
                 webhook = await self.get_webhook(channel.id)
-                await webhook.send(f"<@&{STAFF_ROLE}> {message.author.name} ({message.author.id}) (Account made on {message.author.created_at.__format__('%d/%m/%y | %H:%M:%S')}) has opened a ticket")
-                await webhook.send(f"`{message.author.name}`: {message.content}", files=files)
+                await webhook.send(f"<@&{STAFF_ROLE}> {message.author.name} ({message.author.id}) (Account made on {message.author.created_at.__format__('%d/%m/%y | %H:%M:%S')}) has opened a ticket", avatar_url=self.bot.user.display_avatar.url)
+                await webhook.send(f"`{message.author.name}`: {message.content}", avatar_url=self.bot.user.display_avatar.url, files=files)
                 db.modmail_collection.insert_one({"_id": channel.id, "guild_id": guild.id, "channel_user": message.author.id})
                 await message.channel.send("Our Staff will be with you soon!")
+                await message.add_reaction('✅')
 
             else:
                 r = db.modmail_collection.find_one({"guild_id": guild.id, "channel_user": message.author.id})
                 webhook = await self.get_webhook(r['_id'])
                 files = [await attachment.to_file() for attachment in message.attachments]
-                await webhook.send(f"`{message.author.name}`: {message.content}", files=files)
-                await message.channel.send("Message sent", delete_after=1)
+                await webhook.send(f"`{message.author.name}`: {message.content}", avatar_url=self.bot.user.display_avatar.url, files=files)
+                await message.add_reaction('✅')
 
         else:
             return
@@ -107,7 +100,7 @@ class modmail(commands.Cog, description="Yes"):
             files = [await attachment.to_file() for attachment in ctx.message.attachments]
             await user.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {message_reply}", files=files)
             await ctx.message.delete()
-            await webhook.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {message_reply}", files=files)
+            await webhook.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {message_reply}", avatar_url=self.bot.user.display_avatar.url, files=files)
 
     @commands.command(help='This does the same as reply but without a username')
     @commands.has_permissions(manage_messages=True)
@@ -120,7 +113,7 @@ class modmail(commands.Cog, description="Yes"):
             files = [await attachment.to_file() for attachment in ctx.message.attachments]
             await user.send(f"{STAFF_EMOJI}`Staff Member`: {message_reply}", files=files)
             await ctx.message.delete()
-            await webhook.send(f"{STAFF_EMOJI}`Staff Member`: {message_reply}", files=files)
+            await webhook.send(f"{STAFF_EMOJI}`Staff Member`: {message_reply}", avatar_url=self.bot.user.display_avatar.url, files=files)
 
     @commands.command(help='Block a user of from using the tickets')
     @commands.has_permissions(administrator=True)
@@ -130,11 +123,11 @@ class modmail(commands.Cog, description="Yes"):
         if e is None:
             blacklist = {"_id": member.id}
             db.collection.insert_one(blacklist)
-            await member.send("You have been blocked you can no longer send messages to the mod mail")
-            await ctx.send(f"You have blacklisted {member.name}")
+            await member.send(f"You have been blocked from {self.bot.user.name}")
+            await ctx.send(f"You have blocked {member.name}")
 
         else:
-            await ctx.send(f"{member.name} is already blacklisted")
+            await ctx.send(f"{member.name} is already blocked")
 
     @commands.command(help='Unblocks a user of the tickets')
     @commands.has_permissions(administrator=True)
@@ -142,13 +135,13 @@ class modmail(commands.Cog, description="Yes"):
         e = db.collection.find_one({"_id": member.id})
 
         if e is None:
-            await ctx.send(f"{member.name} is not blacklisted")
+            await ctx.send(f"{member.name} is not block")
 
         else:
             a = db.collection.find_one({"_id": member.id})
             db.collection.delete_one(a)
-            await member.send("You have been unblocked you can now send messages to the mod mail")
-            await ctx.send(f'{member.name} Has been unblacklisted')
+            await member.send(f"You have been unblocked from {self.bot.user.name}")
+            await ctx.send(f'{member.name} Has been unblocked')
 
     @commands.command(help="Credits to our contributors and helpers!")
     async def credit(self, ctx):
@@ -168,6 +161,10 @@ class modmail(commands.Cog, description="Yes"):
         message = "This is not a ticket channel"
         await ctx.send(message)
 
+    @areply.error
+    async def areply_error(self, ctx: commands.Context, error: commands.CommandError):
+        message = "This is not a ticket channel"
+        await ctx.send(message)
 
 def setup(bot):
     bot.add_cog(modmail(bot=bot))

@@ -26,19 +26,19 @@ class ErrorHandling(commands.Cog, name="on command error"):
         elif isinstance(error, CommandNotFound):
             return
         elif isinstance(error, MissingPermissions):
-            embed = discord.Embed(title="ERROR!", description=f"{error}", color=discord.Color.red)
+            embed = discord.Embed(title="ERROR!", description=f"{error}", color=discord.Color.red())
             await ctx.send(embed=embed)
         elif isinstance(error, MissingRequiredArgument):
-            embed = discord.Embed(title="ERROR!", description=f"{error}", color=discord.Color.red)
+            embed = discord.Embed(title="ERROR!", description=f"{error}", color=discord.Color.red())
             await ctx.send(embed=embed)
         elif isinstance(error, commands.NotOwner):
-            embed = discord.Embed(title="Developer Only", description="You must be a developer to run this command", color=discord.Color.red)
+            embed = discord.Embed(title="Developer Only", description="You must be a developer to run this command", color=discord.Color.red())
             await ctx.send(embed=embed, delete_after=5)
             await ctx.reply(embed=embed)
         elif isinstance(error, CheckFailure):
             return
         elif isinstance(error, BadArgument):
-            embed = discord.Embed(title="ERROR!", description=f"{error}", color=discord.Color.red)
+            embed = discord.Embed(title="ERROR!", description=f"{error}", color=discord.Color.red())
             await ctx.send(embed=embed)
         else:
             logging.info(error)
