@@ -74,7 +74,7 @@ class modmail(commands.Cog, description="Yes"):
         else:
             return
     
-    @commands.command()
+    @commands.command(help='This allows you to close a ticket')
     @commands.has_permissions(manage_messages=True)
     async def close(self, ctx, reason=None):
         e = db.modmail_collection.find_one({"guild_id": ctx.guild.id, "channel_user": int(ctx.channel.topic)})
@@ -96,7 +96,7 @@ class modmail(commands.Cog, description="Yes"):
             await user.send(f"This ticket was closed for `{reason}`")
             await ctx.channel.delete()
 
-    @commands.command()
+    @commands.command(help='This allows you to reply to a ticket')
     @commands.has_permissions(manage_messages=True)
     async def reply(self, ctx, *, message_reply=None):
         if message_reply is None:
@@ -109,7 +109,7 @@ class modmail(commands.Cog, description="Yes"):
             await ctx.message.delete()
             await webhook.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {message_reply}", files=files)
 
-    @commands.command()
+    @commands.command(help='This does the same as reply but without a username')
     @commands.has_permissions(manage_messages=True)
     async def areply(self, ctx, *, message_reply=None):
         if message_reply is None:
@@ -122,7 +122,7 @@ class modmail(commands.Cog, description="Yes"):
             await ctx.message.delete()
             await webhook.send(f"{STAFF_EMOJI}`Staff Member`: {message_reply}", files=files)
 
-    @commands.command()
+    @commands.command(help='Block a user of from using the tickets')
     @commands.has_permissions(administrator=True)
     async def block(self, ctx, member: discord.Member):
         e = db.collection.find_one({"_id": member.id})
@@ -136,7 +136,7 @@ class modmail(commands.Cog, description="Yes"):
         else:
             await ctx.send(f"{member.name} is already blacklisted")
 
-    @commands.command()
+    @commands.command(help='Unblocks a user of the tickets')
     @commands.has_permissions(administrator=True)
     async def unblock(self, ctx, member: discord.Member):
         e = db.collection.find_one({"_id": member.id})
@@ -149,6 +149,14 @@ class modmail(commands.Cog, description="Yes"):
             db.collection.delete_one(a)
             await member.send("You have been unblocked you can now send messages to the mod mail")
             await ctx.send(f'{member.name} Has been unblacklisted')
+
+    @commands.command(help="Credits to our contributors and helpers!")
+    async def credit(self, ctx):
+       embed = discord.Embed(title="Credits", color=discord.Color.blurple())
+       embed.add_field(name="Code Developer(s)", value="`Blue.#1270`", inline=False)
+       embed.add_field(name="Helper(s)", value="`Nirlep_5252_#9798`", inline=False)
+       embed.set_footer(text="The code for this bot was made by Blue.#1270")
+       await ctx.send(embed=embed)
 
     @close.error
     async def close_error(self, ctx: commands.Context, error: commands.CommandError):
