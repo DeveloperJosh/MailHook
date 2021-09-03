@@ -3,7 +3,7 @@ The mod mail bot for Fish Hosting\
 Note: You are not allowed to remove the names in the credit command
 
 ## Installing Modules
-Run in cmd
+Run in command prompt
 ```
 # Linux/macOS
 python3 -m pip install -r requirements.txt
