@@ -49,6 +49,21 @@ class MyHelp(commands.HelpCommand):
 
         await help_reply.send(embed=embed)
 
+    async def send_command_help(self, command):
+        help_command = self.context.send
+        embed = discord.Embed(title="Command Information", color=discord.Color.blurple())
+        embed.add_field(name="Usage", value=f"```{self.get_command_signature(command)}```")
+        alias = command.aliases
+        des = command.help
+        time = command._buckets._cooldown
+        if alias:
+            embed.add_field(name="Aliases", value=f"```{alias}```", inline=False)
+        if des:
+            embed.add_field(name="Description", value=f"```{des}```", inline=False)
+        if time:
+            embed.add_field(name="Cooldown", value=f"```{time.per} seconds```", inline=False)
+        await help_command(embed=embed)
+
 
     async def send_cog_help(self, cog):
         help_cog = self.context
