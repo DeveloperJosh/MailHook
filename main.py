@@ -8,7 +8,7 @@ from config import MyHelp, PREFIXES, STATUS
 
 
 intents = discord.Intents(messages=True, guilds=True, reactions=True, members=True, presences=True)
-bot = commands.AutoShardedBot(
+bot = commands.Bot(
     owner_ids=[321750582912221184],
     command_prefix=PREFIXES,
     intents=intents,
