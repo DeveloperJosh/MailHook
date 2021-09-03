@@ -36,11 +36,11 @@ STATUS='My Dms'
 
 ## Commands
 ```
-<close [reason]
-<reply [message]
-<areply [message]
-<block [user]
-<unblock [user]
+?close [reason]
+?reply [message]
+?areply [message]
+?block [user]
+?unblock [user]
 ```
 ## If you need help
 You can add me on discord my user name is Blue.#1270
