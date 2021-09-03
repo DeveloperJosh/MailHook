@@ -1,5 +1,6 @@
 # Fish-Mail
-The mod mail bot for Fish Hosting
+The mod mail bot for Fish Hosting\
+Note: You are not allowed to remove the names in the credit command
 
 ### How to set up
 Make a .env file, Just like this
