@@ -13,13 +13,14 @@ You can get a mongo link [here](https://www.mongodb.com/)
 
 ## Setting up config.py
 ```py
-TICKET_CATEGORY=id here
-WELCOME_CHANNEL=id here
-GUILD_ID=id here
-STAFF_ROLE=id here
-MEMBER_ROLE=id here
-STAFF_EMOJI='yes'
-PREFIXES = ['<', '?']
+TICKET_CATEGORY=#category for the tickets
+WELCOME_CHANNEL=#welcome channel id for the message 
+GUILD_ID=#server id
+STAFF_ROLE=#staff role id
+MEMBER_ROLE=#the member role id
+STAFF_EMOJI='#put a emoji here'
+PREFIXES=['<', '?']
+STATUS='My Dms'
 ```
 
 ## Commands
