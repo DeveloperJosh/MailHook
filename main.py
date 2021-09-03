@@ -4,7 +4,7 @@ import os
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-from config import MyHelp, PREFIXES
+from config import MyHelp, PREFIXES, STATUS
 
 
 intents = discord.Intents(messages=True, guilds=True, reactions=True, members=True, presences=True)
@@ -32,7 +32,7 @@ async def on_ready():
     logging.info('|                 Bot has Started                  |')
     logging.info('|                                                  |')
     logging.info('+__________________________________________________+')
-    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name="My dms"))
+    await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=STATUS))
 
 load_dotenv('.env')
 

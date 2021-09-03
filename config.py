@@ -7,7 +7,8 @@ GUILD_ID=724357152285786112
 STAFF_ROLE=734992571842953247
 MEMBER_ROLE=729419446837575701
 STAFF_EMOJI='<:staff:882711809461735495>'
-PREFIXES = ['<', '?']
+PREFIXES=['<', '?']
+STATUS='My Dms'
 
 async def get_cog_help(cog, context):
     cog = context.bot.get_cog(cog)
