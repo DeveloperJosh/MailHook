@@ -8,6 +8,7 @@ from config import (
     TICKET_CATEGORY, GUILD_ID, STAFF_ROLE,
     MEMBER_ROLE, WELCOME_CHANNEL, STAFF_EMOJI
 )
+import pymongo
 
 
 class modmail(commands.Cog, description="Yes"):
@@ -31,11 +32,11 @@ class modmail(commands.Cog, description="Yes"):
         if channel is None:
             raise commands.ChannelNotFound(f"{channel_id}")
         webhooks: List[discord.Webhook] = await channel.webhooks()
-        webhook = discord.utils.get(webhooks, name="Fish Modmail", user=self.bot.user)
+        webhook = discord.utils.get(webhooks, name=f"{self.bot.user.name}", user=self.bot.user)
         if webhook is not None:
             return webhook
         else:
-            webhook = await channel.create_webhook(name="Fish Modmail")
+            webhook = await channel.create_webhook(name=f"{self.bot.user.name}")
             return webhook
 
     @commands.Cog.listener('on_message')
@@ -58,11 +59,7 @@ class modmail(commands.Cog, description="Yes"):
                 channel = await guild.create_text_channel(name=f'ticket-{random.randint(0,1000)}', category=category, topic=message.author.id)
                 files = [await attachment.to_file() for attachment in message.attachments]
                 webhook = await self.get_webhook(channel.id)
-                await webhook.send(f"<@&{STAFF_ROLE}> {message.author.name} ({message.author.id}) has opened a ticket")
-                embed = discord.Embed(title="Info", color=discord.Color.green())
-                embed.set_thumbnail(url=message.author.display_avatar.url)
-                embed.description = f"Account created on {message.author.created_at.__format__('%d/%m/%y | %H:%M:%S')}"
-                await webhook.send(embed=embed)
+                await webhook.send(f"<@&{STAFF_ROLE}> {message.author.name} ({message.author.id}) (Account made on {message.author.created_at.__format__('%d/%m/%y | %H:%M:%S')}) has opened a ticket")
                 await webhook.send(f"`{message.author.name}`: {message.content}", files=files)
                 db.modmail_collection.insert_one({"_id": channel.id, "guild_id": guild.id, "channel_user": message.author.id})
                 await message.channel.send("Our Staff will be with you soon!")
@@ -76,7 +73,7 @@ class modmail(commands.Cog, description="Yes"):
 
         else:
             return
-
+    
     @commands.command()
     @commands.has_permissions(manage_messages=True)
     async def close(self, ctx, reason=None):

@@ -42,6 +42,7 @@ class ErrorHandling(commands.Cog, name="on command error"):
             await ctx.send(embed=embed)
         else:
             logging.info(error)
+            return
 
 
 def setup(bot):
