@@ -52,8 +52,8 @@ class modmail(commands.Cog, description="Yes"):
         await webhook.send(f"<@&{STAFF_ROLE}> {user.name} ({user_id}) (Account made on {user.created_at.__format__('%d/%m/%y | %H:%M:%S')}) has opened a ticket", avatar_url=self.bot.user.display_avatar.url)
         await webhook.send(f"`{user.name}`: {message if isinstance(message, str) else message.content}", avatar_url=self.bot.user.display_avatar.url, files=files)
         db.modmail_collection.insert_one({"_id": channel.id, "guild_id": guild.id, "channel_user": user_id})
+        await user.send(custom_msg or "Our Staff will be with you soon!")
         if isinstance(message, discord.Message):
-            await message.channel.send(custom_msg or "Our Staff will be with you soon!")
             await message.add_reaction('✅')
 
     @commands.Cog.listener('on_message')
