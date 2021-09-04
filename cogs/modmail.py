@@ -171,8 +171,13 @@ class modmail(commands.Cog, description="Yes"):
     async def credit(self, ctx):
         embed = discord.Embed(title="Credits", color=discord.Color.blurple())
         embed.add_field(name="Code Developer(s)", value="`Blue.#1270`", inline=False)
-        embed.add_field(name="Helper(s)", value="`Nirlep_5252_#9798`", inline=False)
+        embed.add_field(name="Helper(s)", value="`Nirlep_5252_#9798, SylmFox#3635`", inline=False)
         embed.set_footer(text="The code for this bot was made by Blue.#1270")
+        await ctx.send(embed=embed)
+
+    @commands.command()
+    async def github(self, ctx):
+        embed = discord.Embed(title="Github", description=f"Star the code on [github](https://github.com/DeveloperJosh/Fish-Mail) it means a lot", color=discord.Color.blurple())
         await ctx.send(embed=embed)
 
     @close.error
