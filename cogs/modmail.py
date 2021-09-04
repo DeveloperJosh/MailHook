@@ -3,11 +3,10 @@ import discord
 import random
 from discord.ext import commands
 from utils.database import db
-from typing import List
+from typing import List, Optional, Union
 from config import (
     TICKET_CATEGORY, GUILD_ID, STAFF_ROLE, STAFF_EMOJI
 )
-import pymongo
 
 
 class modmail(commands.Cog, description="Yes"):
@@ -18,10 +17,18 @@ class modmail(commands.Cog, description="Yes"):
     async def on_ready(self):
         logging.info('ModMail is ready')
 
-    async def get_webhook(self, channel_id: int) -> discord.Webhook:
+    async def get_webhook(self, channel_id: int, user_id: Optional[int] = None) -> discord.Webhook:
+        """
+        If the channel is not found, a new channel is created and webhook is returned
+        Altho, it will only create a new channel if the `user_id` is passed, else it'll just raise the error.
+        """
         channel = self.bot.get_channel(channel_id)
         if channel is None:
-            raise commands.ChannelNotFound(f"{channel_id}")
+            if user_id is None:
+                raise commands.ChannelNotFound(f"{channel_id}")
+            guild = self.bot.get_guild(GUILD_ID)
+            category = self.bot.get_channel(TICKET_CATEGORY)
+            channel = await guild.create_text_channel(name=f'ticket-{random.randint(0,1000)}', category=category, topic=user_id)
         webhooks: List[discord.Webhook] = await channel.webhooks()
         webhook = discord.utils.get(webhooks, name=f"{self.bot.user.name}", user=self.bot.user)
         if webhook is not None:
@@ -30,8 +37,27 @@ class modmail(commands.Cog, description="Yes"):
             webhook = await channel.create_webhook(name=f"{self.bot.user.name}")
             return webhook
 
+    async def start_ticket(
+        self, user_id: int,
+        attachments: Optional[List[discord.Attachment]] = [],
+        message: Optional[Union[discord.Message, str]] = None,
+        custom_msg: str = None
+    ) -> None:
+        guild = self.bot.get_guild(GUILD_ID)
+        user = self.bot.get_user(user_id)
+        category = self.bot.get_channel(TICKET_CATEGORY)
+        channel = await guild.create_text_channel(name=f'ticket-{random.randint(0,1000)}', category=category, topic=user_id)
+        files = [await attachment.to_file() for attachment in attachments]
+        webhook = await self.get_webhook(channel.id)
+        await webhook.send(f"<@&{STAFF_ROLE}> {user.name} ({user_id}) (Account made on {user.created_at.__format__('%d/%m/%y | %H:%M:%S')}) has opened a ticket", avatar_url=self.bot.user.display_avatar.url)
+        await webhook.send(f"`{user.name}`: {message if isinstance(message, str) else message.content}", avatar_url=self.bot.user.display_avatar.url, files=files)
+        db.modmail_collection.insert_one({"_id": channel.id, "guild_id": guild.id, "channel_user": user_id})
+        if isinstance(message, discord.Message):
+            await message.channel.send(custom_msg or "Our Staff will be with you soon!")
+            await message.add_reaction('✅')
+
     @commands.Cog.listener('on_message')
-    async def modmail_channel(self, message):
+    async def modmail_channel(self, message: discord.Message):
         guild = self.bot.get_guild(GUILD_ID)
         e = db.modmail_collection.find_one({"guild_id": guild.id, "channel_user": message.author.id})
         b = db.collection.find_one({"_id": message.author.id})
@@ -46,27 +72,25 @@ class modmail(commands.Cog, description="Yes"):
                 await message.add_reaction('❌')
                 return
             if e is None:
-                user = message.author
-                category = self.bot.get_channel(TICKET_CATEGORY)
-                channel = await guild.create_text_channel(name=f'ticket-{random.randint(0,1000)}', category=category, topic=message.author.id)
-                files = [await attachment.to_file() for attachment in message.attachments]
-                webhook = await self.get_webhook(channel.id)
-                await webhook.send(f"<@&{STAFF_ROLE}> {message.author.name} ({message.author.id}) (Account made on {message.author.created_at.__format__('%d/%m/%y | %H:%M:%S')}) has opened a ticket", avatar_url=self.bot.user.display_avatar.url)
-                await webhook.send(f"`{message.author.name}`: {message.content}", avatar_url=self.bot.user.display_avatar.url, files=files)
-                db.modmail_collection.insert_one({"_id": channel.id, "guild_id": guild.id, "channel_user": message.author.id})
-                await message.channel.send("Our Staff will be with you soon!")
-                await message.add_reaction('✅')
-
+                await self.start_ticket(message.author.id, message.attachments, message)
             else:
                 r = db.modmail_collection.find_one({"guild_id": guild.id, "channel_user": message.author.id})
-                webhook = await self.get_webhook(r['_id'])
+                webhook = await self.get_webhook(r['_id'], message.author.id)
                 files = [await attachment.to_file() for attachment in message.attachments]
                 await webhook.send(f"`{message.author.name}`: {message.content}", avatar_url=self.bot.user.display_avatar.url, files=files)
                 await message.add_reaction('✅')
 
         else:
             return
-    
+
+    @commands.command(help="Start a ticket for a user!", aliases=['start-ticket'])
+    @commands.has_permissions(manage_messages=True)
+    async def start(self, ctx: commands.Context, user: Optional[discord.User] = None):
+        if user is None:
+            return await ctx.reply("Please mention a valid user.")
+        await self.start_ticket(user.id, message=f"Ticket opened by staff: `{ctx.author}`", custom_msg=f"A ticket has been started by a moderator: `{ctx.author}`")
+        await ctx.message.add_reaction('✅')
+
     @commands.command(help='This allows you to close a ticket')
     @commands.has_permissions(manage_messages=True)
     async def close(self, ctx, reason=None):
@@ -145,11 +169,11 @@ class modmail(commands.Cog, description="Yes"):
 
     @commands.command(help="Credits to our contributors and helpers!")
     async def credit(self, ctx):
-       embed = discord.Embed(title="Credits", color=discord.Color.blurple())
-       embed.add_field(name="Code Developer(s)", value="`Blue.#1270`", inline=False)
-       embed.add_field(name="Helper(s)", value="`Nirlep_5252_#9798`", inline=False)
-       embed.set_footer(text="The code for this bot was made by Blue.#1270")
-       await ctx.send(embed=embed)
+        embed = discord.Embed(title="Credits", color=discord.Color.blurple())
+        embed.add_field(name="Code Developer(s)", value="`Blue.#1270`", inline=False)
+        embed.add_field(name="Helper(s)", value="`Nirlep_5252_#9798`", inline=False)
+        embed.set_footer(text="The code for this bot was made by Blue.#1270")
+        await ctx.send(embed=embed)
 
     @close.error
     async def close_error(self, ctx: commands.Context, error: commands.CommandError):
@@ -165,6 +189,7 @@ class modmail(commands.Cog, description="Yes"):
     async def areply_error(self, ctx: commands.Context, error: commands.CommandError):
         message = "This is not a ticket channel"
         await ctx.send(message)
+
 
 def setup(bot):
     bot.add_cog(modmail(bot=bot))
