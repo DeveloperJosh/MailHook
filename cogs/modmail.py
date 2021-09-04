@@ -7,7 +7,6 @@ from typing import List
 from config import (
     TICKET_CATEGORY, GUILD_ID, STAFF_ROLE, STAFF_EMOJI
 )
-import pymongo
 
 
 class modmail(commands.Cog, description="Yes"):
@@ -46,7 +45,6 @@ class modmail(commands.Cog, description="Yes"):
                 await message.add_reaction('❌')
                 return
             if e is None:
-                user = message.author
                 category = self.bot.get_channel(TICKET_CATEGORY)
                 channel = await guild.create_text_channel(name=f'ticket-{random.randint(0,1000)}', category=category, topic=message.author.id)
                 files = [await attachment.to_file() for attachment in message.attachments]
@@ -66,7 +64,7 @@ class modmail(commands.Cog, description="Yes"):
 
         else:
             return
-    
+
     @commands.command(help='This allows you to close a ticket')
     @commands.has_permissions(manage_messages=True)
     async def close(self, ctx, reason=None):
@@ -145,11 +143,11 @@ class modmail(commands.Cog, description="Yes"):
 
     @commands.command(help="Credits to our contributors and helpers!")
     async def credit(self, ctx):
-       embed = discord.Embed(title="Credits", color=discord.Color.blurple())
-       embed.add_field(name="Code Developer(s)", value="`Blue.#1270`", inline=False)
-       embed.add_field(name="Helper(s)", value="`Nirlep_5252_#9798`", inline=False)
-       embed.set_footer(text="The code for this bot was made by Blue.#1270")
-       await ctx.send(embed=embed)
+        embed = discord.Embed(title="Credits", color=discord.Color.blurple())
+        embed.add_field(name="Code Developer(s)", value="`Blue.#1270`", inline=False)
+        embed.add_field(name="Helper(s)", value="`Nirlep_5252_#9798`", inline=False)
+        embed.set_footer(text="The code for this bot was made by Blue.#1270")
+        await ctx.send(embed=embed)
 
     @close.error
     async def close_error(self, ctx: commands.Context, error: commands.CommandError):
@@ -165,6 +163,7 @@ class modmail(commands.Cog, description="Yes"):
     async def areply_error(self, ctx: commands.Context, error: commands.CommandError):
         message = "This is not a ticket channel"
         await ctx.send(message)
+
 
 def setup(bot):
     bot.add_cog(modmail(bot=bot))
