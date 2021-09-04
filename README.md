@@ -13,7 +13,7 @@ python3 -m pip install -r requirements.txt
 py -3 -m pip install -r requirements.txt
 ```
 
-## Make sure to have those on
+## Make sure to have these on
 ![](https://media.discordapp.net/attachments/877208401111838790/883784891634970624/unknown.png)
 Turn them on here [here](https://discord.com/developers/applications)
 
