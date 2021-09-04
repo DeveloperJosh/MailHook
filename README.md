@@ -41,4 +41,4 @@ STATUS='My Dms'
 ?unblock [user]
 ```
 ## If you need help
-You can add me on discord my user name is Blue.#1270 **DO NOT ADD ME WITHOUT A REASON**
+You can add me on discord my username is Blue.#1270 **DO NOT ADD ME WITHOUT A REASON**
