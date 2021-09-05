@@ -43,7 +43,7 @@ STATUS='My Dms'
 # Linux/MacOS
 python3 main.py
 
-#Windows
+# Windows
 py main.py
 ```
 ## Running 
