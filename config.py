@@ -1,12 +1,12 @@
 import discord
 from discord.ext import commands
 
-TICKET_CATEGORY=883774304557355008
+TICKET_CATEGORY=884099151674105926
 GUILD_ID=781601403432992818
-STAFF_ROLE=856186043131756564
+STAFF_ROLE=856188255347277824
 STAFF_EMOJI='<:staff:883734644149858344>'
 PREFIXES=['<', '?']
-STATUS='for your suggestions'
+STATUS='for your snitches'
 
 async def get_cog_help(cog, context):
     cog = context.bot.get_cog(cog)
