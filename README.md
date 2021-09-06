@@ -1,7 +1,8 @@
 # Fish-Mail
 The mod mail bot for Fish Hosting\
 Note: You are not allowed to remove the names in the credit command\
-Note: If you want any ideas/commands added to the bot please tell me [here](https://github.com/DeveloperJosh/Fish-Mail/discussions/2)
+Note: If you want any ideas/commands added to the bot please tell me [here](https://github.com/DeveloperJosh/Fish-Mail/discussions/2)\
+Note: If you need help with the setup [join our discord](https://discord.gg/j99syeQDQk)
 
 ## Installing Modules
 Run in command prompt
