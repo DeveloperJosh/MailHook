@@ -38,6 +38,19 @@ PREFIXES=['<', '?']
 STATUS='My Dms'
 ```
 
+## How to run
+
+```py
+# Linux/MacOS
+python3 main.py
+
+# Windows
+py main.py
+```
+## Running 
+This is what you should see when the bot is running
+![](https://cdn.discordapp.com/attachments/877208401111838790/884126144335589396/unknown.png)
+
 ## Commands
 ```
 ?close [reason]
