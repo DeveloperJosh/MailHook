@@ -5,7 +5,7 @@ from discord.ext import commands
 from utils.database import db
 from typing import List, Optional, Union
 from config import (
-    TICKET_CATEGORY, GUILD_ID, STAFF_ROLE, STAFF_EMOJI
+    PREFIXES, TICKET_CATEGORY, GUILD_ID, STAFF_ROLE, STAFF_EMOJI
 )
 
 
@@ -82,6 +82,15 @@ class modmail(commands.Cog, description="Yes"):
 
         else:
             return
+
+    @commands.Cog.listener("on_message")
+    async def prefix_reply(self, message: discord.Message):
+        if message.author.bot:
+            return
+        bot_id = self.bot.user.id
+        if message.content.lower() in [f'<@{bot_id}>', f'<@!{bot_id}>']:
+            prefixes = PREFIXES
+            return await message.reply('My prefixes are: ' + ', '.join([f"`{prefix}`" for prefix in prefixes]))
 
     @commands.command(help="Start a ticket for a user!", aliases=['start-ticket'])
     @commands.has_permissions(manage_messages=True)
