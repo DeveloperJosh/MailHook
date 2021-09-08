@@ -59,5 +59,12 @@ This is what you should see when the bot is running
 ?block [user]
 ?unblock [user]
 ```
+
+## Images
+
+![](https://cdn.discordapp.com/attachments/885295587438772236/885295940519477339/unknown.png)
+![](https://cdn.discordapp.com/attachments/885295587438772236/885296154387025920/unknown.png)
+![](https://cdn.discordapp.com/attachments/885295587438772236/885296399170822144/unknown.png)
+
 ## If you need help
 You can add me on discord my username is Blue.#1270 **DO NOT ADD ME WITHOUT A REASON**
