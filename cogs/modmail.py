@@ -1,11 +1,12 @@
 import logging
 import discord
 import random
+from io import BytesIO
 from discord.ext import commands
 from utils.database import db
 from typing import List, Optional, Union
 from config import (
-    PREFIXES, TICKET_CATEGORY, GUILD_ID, STAFF_ROLE, STAFF_EMOJI
+    PREFIXES, TICKET_CATEGORY, GUILD_ID, STAFF_ROLE, STAFF_EMOJI, TRANSCRIPT_CHANNEL
 )
 
 
@@ -36,6 +37,16 @@ class modmail(commands.Cog, description="Yes"):
         else:
             webhook = await channel.create_webhook(name=f"{self.bot.user.name}")
             return webhook
+
+    async def prepare_transript(self, channel: discord.TextChannel, send: bool = True) -> discord.File:
+        all_msgs = await channel.history(limit=None, oldest_first=True).flatten()
+        text = ""
+        for msg in all_msgs:
+            text += f"{msg.author} (UserID: {channel.topic}) (MsgID: {msg.id}) {msg.created_at.strftime('%m/%d/%Y, %H:%M:%S')}: {msg.content}\n\n"
+        file = discord.File(BytesIO(text.encode("utf-8")), filename=f"{channel.topic}-transcript.txt")
+        if send:
+            await self.bot.get_channel(TRANSCRIPT_CHANNEL).send(file=file)
+        return file
 
     async def start_ticket(
         self, user_id: int,
@@ -113,6 +124,7 @@ class modmail(commands.Cog, description="Yes"):
             db.modmail_collection.delete_one(a)
             user = self.bot.get_user(int(ctx.channel.topic))
             await user.send(f"This ticket was closed by `{ctx.author.name}`")
+            await self.prepare_transript(ctx.channel)
             await ctx.channel.delete()
 
         else:
@@ -120,6 +132,7 @@ class modmail(commands.Cog, description="Yes"):
             db.modmail_collection.delete_one(a)
             user = self.bot.get_user(int(ctx.channel.topic))
             await user.send(f"This ticket was closed for `{reason}`")
+            await self.prepare_transript(ctx.channel)
             await ctx.channel.delete()
 
     @commands.command(help='This allows you to reply to a ticket')
@@ -186,7 +199,7 @@ class modmail(commands.Cog, description="Yes"):
 
     @commands.command()
     async def github(self, ctx):
-        embed = discord.Embed(title="Github", description=f"Star the code on [github](https://github.com/DeveloperJosh/Fish-Mail) it means a lot", color=discord.Color.blurple())
+        embed = discord.Embed(title="Github", description="Star the code on [github](https://github.com/DeveloperJosh/Fish-Mail) it means a lot", color=discord.Color.blurple())
         await ctx.send(embed=embed)
 
     @close.error

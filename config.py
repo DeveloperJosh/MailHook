@@ -1,12 +1,14 @@
 import discord
 from discord.ext import commands
 
-TICKET_CATEGORY=882462921169453116
-GUILD_ID=724357152285786112
-STAFF_ROLE=734992571842953247
-STAFF_EMOJI='<:staff:882711809461735495>'
-PREFIXES=['<', '?']
-STATUS='My Dms'
+TICKET_CATEGORY = 882462921169453116
+GUILD_ID = 724357152285786112
+STAFF_ROLE = 734992571842953247
+TRANSCRIPT_CHANNEL = 1234  # PLZ REPLACE WITH ID
+STAFF_EMOJI = '<:staff:882711809461735495>'
+PREFIXES = ['<', '?']
+STATUS = 'My Dms'
+
 
 async def get_cog_help(cog, context):
     cog = context.bot.get_cog(cog)
@@ -23,6 +25,7 @@ async def get_cog_help(cog, context):
 
     return embed
 
+
 class MyHelp(commands.HelpCommand):
     async def send_bot_help(self, mapping):
         help_reply = self.context
@@ -31,19 +34,19 @@ class MyHelp(commands.HelpCommand):
         embed.set_footer(text=f"Requested by {self.context.author}", icon_url=self.context.author.avatar.url)
         embed.add_field(name="Prefix", value=f"`{help_reply.clean_prefix}`", inline=False)
         for cog, cmds in mapping.items():
-         if cog is not None and cog.qualified_name.lower() == cog.qualified_name:
-              value = f', {help_reply.clean_prefix}'.join([cmd.name for cmd in cmds])
-              if len(cmds) != 0:
-                if cog.qualified_name == 'nsfw' and not self.context.channel.is_nsfw():
-                     pass
+            if cog is not None and cog.qualified_name.lower() == cog.qualified_name:
+                value = f', {help_reply.clean_prefix}'.join([cmd.name for cmd in cmds])
+                if len(cmds) != 0:
+                    if cog.qualified_name == 'nsfw' and not self.context.channel.is_nsfw():
+                        pass
+                    else:
+                        embed.add_field(
+                            name=f"{cog.qualified_name.title()} [ `{len(cmds)}` ]",
+                            value=f"{help_reply.clean_prefix}{value}",
+                            inline=False
+                        )
                 else:
-                 embed.add_field(
-                    name=f"{cog.qualified_name.title()} [ `{len(cmds)}` ]",
-                    value=f"{help_reply.clean_prefix}{value}",
-                    inline=False
-                    )
-              else:
-                pass
+                    pass
 
         await help_reply.send(embed=embed)
 
@@ -61,7 +64,6 @@ class MyHelp(commands.HelpCommand):
         if time:
             embed.add_field(name="Cooldown", value=f"```{time.per} seconds```", inline=False)
         await help_command(embed=embed)
-
 
     async def send_cog_help(self, cog):
         help_cog = self.context
