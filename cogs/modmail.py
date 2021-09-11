@@ -13,6 +13,8 @@ from config import (
 class modmail(commands.Cog, description="Yes"):
     def __init__(self, bot: commands.AutoShardedBot):
         self.bot = bot
+        self.spam_prevention = commands.CooldownMapping.from_cooldown(6, 10, commands.BucketType.user)
+        self.temp_blocked = []
 
     @commands.Cog.listener()
     async def on_ready(self):
@@ -69,6 +71,16 @@ class modmail(commands.Cog, description="Yes"):
 
     @commands.Cog.listener('on_message')
     async def modmail_channel(self, message: discord.Message):
+        if message.author.id in self.temp_blocked:
+            return
+        bucket = self.spam_prevention.get_bucket(message)
+        retry_after = bucket.update_rate_limit()
+        if retry_after:
+            msg_ = await message.channel.send("Please stop spamming, your messages will be ignored for the next 15 seconds.")
+            self.temp_blocked.append(message.author.id)
+            await asyncio.sleep(15)
+            self.temp_blocked.remove(message.author.id)
+            return await msg_.edit(content="You can now send messages again.")
         guild = self.bot.get_guild(GUILD_ID)
         e = db.modmail_collection.find_one({"guild_id": guild.id, "channel_user": message.author.id})
         b = db.collection.find_one({"_id": message.author.id})
