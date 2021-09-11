@@ -71,6 +71,8 @@ class modmail(commands.Cog, description="Yes"):
 
     @commands.Cog.listener('on_message')
     async def modmail_channel(self, message: discord.Message):
+        if message.author.id in self.temp_blocked:
+            return
         bucket = self.spam_prevention.get_bucket(message)
         retry_after = bucket.update_rate_limit()
         if retry_after:
