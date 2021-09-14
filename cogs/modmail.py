@@ -181,14 +181,6 @@ class modmail(commands.Cog, description="Yes"):
             await ctx.message.delete()
             await webhook.send(f"{STAFF_EMOJI}`Staff Member`: {message_reply}", avatar_url=self.bot.user.display_avatar.url, files=files)
 
-    @slash_command(help="fucking kill me", guild_ids=[724357152285786112])
-    async def test(self, ctx: SlashContext, arg: str):
-        user = self.bot.get_user(int(ctx.channel.topic))
-        webhook = await get_webhook(self.bot, ctx.channel.id)
-        await user.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}")
-        await ctx.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}")
-        await webhook.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}", avatar_url=self.bot.user.display_avatar.url)  # , files=files)
-
     @commands.command(help='Block a user of from using the tickets')
     @commands.has_permissions(administrator=True)
     async def block(self, ctx, member: discord.Member):
@@ -229,6 +221,12 @@ class modmail(commands.Cog, description="Yes"):
     async def github(self, ctx):
         embed = discord.Embed(title="Github", description="Star the code on [github](https://github.com/DeveloperJosh/Fish-Mail) it means a lot", color=discord.Color.blurple())
         await ctx.send(embed=embed)
+
+    @slash_command(name="reply", help="Reply to a ticket", guild_ids=[GUILD_ID])
+    async def _reply(self, ctx: SlashContext, arg: str):
+        user = self.bot.get_user(int(ctx.channel.topic))
+        await user.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}")
+        await ctx.reply(f'{STAFF_EMOJI}`{ctx.author.name}`: {arg}')
 
     @close.error
     async def close_error(self, ctx: commands.Context, error: commands.CommandError):
