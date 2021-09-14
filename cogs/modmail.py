@@ -33,6 +33,7 @@ async def get_webhook(bot, channel_id: int, user_id: Optional[int] = None) -> di
         webhook = await channel.create_webhook(name=f"{bot.user.name}")
         return webhook
 
+
 class modmail(commands.Cog, description="Yes"):
     def __init__(self, bot: commands.bot):
         self.bot = bot
@@ -101,7 +102,7 @@ class modmail(commands.Cog, description="Yes"):
                 await self.start_ticket(message.author.id, message.attachments, message)
             else:
                 r = db.modmail_collection.find_one({"guild_id": guild.id, "channel_user": message.author.id})
-                webhook = await get_webhook(bot, r['_id'], message.author.id)
+                webhook = await get_webhook(self.bot, r['_id'], message.author.id)
                 files = [await attachment.to_file() for attachment in message.attachments]
                 await webhook.send(f"`{message.author.name}`: {message.content}", avatar_url=self.bot.user.display_avatar.url, files=files)
                 await message.add_reaction('✅')
@@ -186,7 +187,7 @@ class modmail(commands.Cog, description="Yes"):
         webhook = await get_webhook(self.bot, ctx.channel.id)
         await user.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}")
         await ctx.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}")
-        await webhook.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}", avatar_url=self.bot.user.display_avatar.url, files=files)
+        await webhook.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}", avatar_url=self.bot.user.display_avatar.url)  # , files=files)
 
     @commands.command(help='Block a user of from using the tickets')
     @commands.has_permissions(administrator=True)
