@@ -1,4 +1,4 @@
-git+https://github.com/Rapptz/discord.py
+git+https://github.com/Nirlep5252/discord.py
 git+https://github.com/Gorialis/jishaku@master
 python-dotenv~=0.15.0
 pytimeparse==1.1.8
