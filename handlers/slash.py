@@ -1,9 +1,26 @@
+"""
+Copyright 2021 Nirlep_5252_
+
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+"""
+
 import discord
 import inspect
+import traceback
 from typing import Any, Dict, List, Union
 from inspect import getfullargspec
-from discord.ext.commands import Bot
 from discord.ext import commands
+from utils.bot import EpicBot
 
 slash_cmd_option_types = {
     str: 3,
@@ -33,7 +50,7 @@ slash_cmd_option_converters = {
 
 
 class SlashContext(discord.Interaction):
-    def __init__(self, interaction: discord.Interaction, bot: commands.Bot):
+    def __init__(self, interaction: discord.Interaction, bot: EpicBot):
         super().__init__(data=interaction._raw_data, state=interaction._state)
         self._bot = bot
 
@@ -104,7 +121,7 @@ class SlashCommand:
             del _raw_args[_key]
             break
         _raw_options = self._parse_raw_args(_raw_args, _defaults)
-        self.options = self._parse_options(_raw_options)
+        self.options = kwargs.get('options') or self._parse_options(_raw_options)
 
     def __repr__(self) -> str:
         return f"SlashCommand(name={self.name} callback={self.callback} desc={self.desc} guild_ids={self.guild_ids} options={self.options})"
@@ -140,7 +157,10 @@ class SlashCommand:
     def _parse_raw_args(self, raw_args: Dict[str, Any], defaults: tuple) -> List[Union[dict, SlashCommandOption]]:
         final = []
         i = 0
-        args_copy = list(raw_args)[-(len(defaults) - 1):]
+        if len(defaults) > 0:
+            args_copy = list(raw_args)[-(len(defaults)):]
+        else:
+            args_copy = []
         for arg, type_ in raw_args.items():
             if isinstance(type_, SlashCommandOption):
                 final.append(raw_args[arg])
@@ -173,11 +193,11 @@ def get_option(name: str, options: List[SlashCommandOption]):
     raise ValueError(f'Option {name} not found')
 
 
-async def slash_handler(interaction: discord.Interaction, bot: commands.Bot):
+async def slash_handler(interaction: discord.Interaction, bot: EpicBot):
     class something(object):
         def __init__(self, client):
-            self.bot = client
-    all_slash_commands = bot.slash_cmds
+            self.client = client
+    all_slash_commands: Dict[str, SlashCommand] = bot.slash_cmds
     data = interaction.data
     inter_type = data.get('type')
     # checking if it's a slash cmd or not
@@ -190,8 +210,9 @@ async def slash_handler(interaction: discord.Interaction, bot: commands.Bot):
     if data.get('name') not in all_slash_commands:
         return
     slash_cmd = all_slash_commands[data.get('name')]
-    if interaction.guild_id not in slash_cmd.guild_ids:
-        return
+    if not slash_cmd._is_global:
+        if interaction.guild_id not in slash_cmd.guild_ids:
+            return
 
     kwargs = {}
     ctx = SlashContext(interaction, bot)
@@ -201,13 +222,16 @@ async def slash_handler(interaction: discord.Interaction, bot: commands.Bot):
             raise TypeError(f'Not known option type {_opt.type}')
         converter = slash_cmd_option_converters[_opt.type]
         kwargs.update({_opt.name: await converter(ctx, option['value']) if inspect.iscoroutinefunction(converter) else converter(option['value'])})
-    if slash_cmd._cog:
-        await slash_cmd.callback(something(bot), ctx, **kwargs)
-    else:
-        await slash_cmd.callback(ctx, **kwargs)
+    try:
+        if slash_cmd._cog:
+            await slash_cmd.callback(something(client=bot), ctx, **kwargs)
+        else:
+            await slash_cmd.callback(ctx, **kwargs)
+    except Exception as e:
+        traceback.print_exception(type(e), e, e.__traceback__)
 
 
-async def update_app_commands(bot: commands.Bot):
+async def update_app_commands(bot: EpicBot):
     bot.slash_cmds = slash_cmds
     global_slash_cmds = []
     guild_slash_cmds: Dict[int, list] = {}
@@ -229,6 +253,9 @@ async def update_app_commands(bot: commands.Bot):
     await bot.http.bulk_upsert_global_commands(bot.user.id, global_slash_cmds)
     print(f"Updated {len(global_slash_cmds)} global commands")
     for guild_id, guild_commands in guild_slash_cmds.items():
-        await bot.http.bulk_upsert_guild_commands(bot.user.id, guild_id, guild_commands)
+        try:
+            await bot.http.bulk_upsert_guild_commands(bot.user.id, guild_id, guild_commands)
+        except discord.Forbidden:
+            print(f"Unable to update guild commands for guild ID: {guild_id}\n\nPlease re-add the bot to that guild using the application.commands scope.")
         print(f"Updated {len(guild_commands)} for guild ID: {guild_id}")
     print(f"Updated guild commands for {len(guild_slash_cmds)} guilds")
