@@ -12,6 +12,28 @@ from config import (
 )
 
 
+async def get_webhook(bot, channel_id: int, user_id: Optional[int] = None) -> discord.Webhook:
+    """
+    If the channel is not found, a new channel is created and webhook is returned
+    Altho, it will only create a new channel if the `user_id` is passed, else it'll just raise the error.
+    """
+    channel = bot.get_channel(channel_id)
+    if channel is None:
+        if user_id is None:
+            raise commands.ChannelNotFound(f"{channel_id}")
+        guild = bot.get_guild(GUILD_ID)
+        category = bot.get_channel(TICKET_CATEGORY)
+        channel = await guild.create_text_channel(name=f'ticket-{random.randint(0, 1000)}', category=category,
+                                                  topic=user_id)
+    webhooks: List[discord.Webhook] = await channel.webhooks()
+    webhook = discord.utils.get(webhooks, name=f"{bot.user.name}", user=bot.user)
+    if webhook is not None:
+        return webhook
+    else:
+        webhook = await channel.create_webhook(name=f"{bot.user.name}")
+        return webhook
+
+
 class modmail(commands.Cog, description="Yes"):
     def __init__(self, bot: commands.bot):
         self.bot = bot
@@ -21,26 +43,6 @@ class modmail(commands.Cog, description="Yes"):
     @commands.Cog.listener()
     async def on_ready(self):
         logging.info('ModMail is ready')
-
-    async def get_webhook(self, channel_id: int, user_id: Optional[int] = None) -> discord.Webhook:
-        """
-        If the channel is not found, a new channel is created and webhook is returned
-        Altho, it will only create a new channel if the `user_id` is passed, else it'll just raise the error.
-        """
-        channel = self.bot.get_channel(channel_id)
-        if channel is None:
-            if user_id is None:
-                raise commands.ChannelNotFound(f"{channel_id}")
-            guild = self.bot.get_guild(GUILD_ID)
-            category = self.bot.get_channel(TICKET_CATEGORY)
-            channel = await guild.create_text_channel(name=f'ticket-{random.randint(0,1000)}', category=category, topic=user_id)
-        webhooks: List[discord.Webhook] = await channel.webhooks()
-        webhook = discord.utils.get(webhooks, name=f"{self.bot.user.name}", user=self.bot.user)
-        if webhook is not None:
-            return webhook
-        else:
-            webhook = await channel.create_webhook(name=f"{self.bot.user.name}")
-            return webhook
 
     async def prepare_transript(self, channel: discord.TextChannel, send: bool = True) -> discord.File:
         all_msgs = await channel.history(limit=None, oldest_first=True).flatten()
@@ -63,7 +65,7 @@ class modmail(commands.Cog, description="Yes"):
         category = self.bot.get_channel(TICKET_CATEGORY)
         channel = await guild.create_text_channel(name=f'ticket-{random.randint(0,1000)}', category=category, topic=user_id)
         files = [await attachment.to_file() for attachment in attachments]
-        webhook = await self.get_webhook(channel.id)
+        webhook = await get_webhook(self.bot, channel.id)
         await webhook.send(f"<@&{STAFF_ROLE}> {user.name} (`{user_id}`) (Account made on `{user.created_at.__format__('%d/%m/%y | %H:%M:%S')}`) has opened a ticket", avatar_url=self.bot.user.display_avatar.url)
         await webhook.send(f"`{user.name}`: {message if isinstance(message, str) else message.content}", avatar_url=self.bot.user.display_avatar.url, files=files)
         db.modmail_collection.insert_one({"_id": channel.id, "guild_id": guild.id, "channel_user": user_id})
@@ -100,7 +102,7 @@ class modmail(commands.Cog, description="Yes"):
                 await self.start_ticket(message.author.id, message.attachments, message)
             else:
                 r = db.modmail_collection.find_one({"guild_id": guild.id, "channel_user": message.author.id})
-                webhook = await self.get_webhook(r['_id'], message.author.id)
+                webhook = await get_webhook(self.bot, r['_id'], message.author.id)
                 files = [await attachment.to_file() for attachment in message.attachments]
                 await webhook.send(f"`{message.author.name}`: {message.content}", avatar_url=self.bot.user.display_avatar.url, files=files)
                 await message.add_reaction('✅')
@@ -160,7 +162,7 @@ class modmail(commands.Cog, description="Yes"):
             await ctx.send('You need to add text')
         else:
             user = self.bot.get_user(int(ctx.channel.topic))
-            webhook = await self.get_webhook(ctx.channel.id)
+            webhook = await get_webhook(self.bot, ctx.channel.id)
             files = [await attachment.to_file() for attachment in ctx.message.attachments]
             await user.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {message_reply}", files=files)
             await ctx.message.delete()
@@ -173,7 +175,7 @@ class modmail(commands.Cog, description="Yes"):
             await ctx.send('You need to add text')
         else:
             user = self.bot.get_user(int(ctx.channel.topic))
-            webhook = await self.get_webhook(ctx.channel.id)
+            webhook = await get_webhook(self.bot, ctx.channel.id)
             files = [await attachment.to_file() for attachment in ctx.message.attachments]
             await user.send(f"{STAFF_EMOJI}`Staff Member`: {message_reply}", files=files)
             await ctx.message.delete()
@@ -181,11 +183,11 @@ class modmail(commands.Cog, description="Yes"):
 
     @slash_command(help="fucking kill me", guild_ids=[724357152285786112])
     async def test(self, ctx: SlashContext, arg: str):
-        user = self.client.get_user(int(ctx.channel.topic))
-        #webhook = await bot.get_webhook(ctx.channel.id)
+        user = self.bot.get_user(int(ctx.channel.topic))
+        webhook = await get_webhook(self.bot, ctx.channel.id)
         await user.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}")
         await ctx.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}")
-        #await webhook.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}", avatar_url=self.bot.user.display_avatar.url, files=files)
+        await webhook.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}", avatar_url=self.bot.user.display_avatar.url)  # , files=files)
 
     @commands.command(help='Block a user of from using the tickets')
     @commands.has_permissions(administrator=True)
