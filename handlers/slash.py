@@ -180,6 +180,7 @@ async def slash_handler(interaction: discord.Interaction, bot: commands.Bot):
     class something(object):
         def __init__(self, client):
             self.client = client
+            self.bot = client
     all_slash_commands: Dict[str, SlashCommand] = bot.slash_cmds
     data = interaction.data
     inter_type = data.get('type')
