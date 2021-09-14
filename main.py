@@ -1,10 +1,11 @@
+from handlers.slash import SlashContext, slash_command, slash_handler, update_app_commands
 import logging
 import os
 
 import discord
 from discord.ext import commands
 from dotenv import load_dotenv
-from config import MyHelp, PREFIXES, STATUS
+from config import STAFF_EMOJI, MyHelp, PREFIXES, STATUS
 
 
 intents = discord.Intents(messages=True, guilds=True, reactions=True, members=True, presences=True)
@@ -33,6 +34,15 @@ async def on_ready():
     logging.info('|                                                  |')
     logging.info('+__________________________________________________+')
     await bot.change_presence(activity=discord.Activity(type=discord.ActivityType.watching, name=STATUS))
+
+async def interaction_event(interaction):
+    await slash_handler(interaction, bot)
+
+async def connect_event():
+    await update_app_commands(bot)
+
+bot.add_listener(interaction_event, 'on_interaction')
+bot.add_listener(connect_event, 'on_connect')
 
 load_dotenv('.env')
 
