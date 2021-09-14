@@ -176,7 +176,7 @@ def get_option(name: str, options: List[SlashCommandOption]):
 async def slash_handler(interaction: discord.Interaction, bot: commands.Bot):
     class something(object):
         def __init__(self, client):
-            self.client = client
+            self.bot = client
     all_slash_commands = bot.slash_cmds
     data = interaction.data
     inter_type = data.get('type')
@@ -202,7 +202,7 @@ async def slash_handler(interaction: discord.Interaction, bot: commands.Bot):
         converter = slash_cmd_option_converters[_opt.type]
         kwargs.update({_opt.name: await converter(ctx, option['value']) if inspect.iscoroutinefunction(converter) else converter(option['value'])})
     if slash_cmd._cog:
-        await slash_cmd.callback(something(client=bot), ctx, **kwargs)
+        await slash_cmd.callback(something(bot=bot), ctx, **kwargs)
     else:
         await slash_cmd.callback(ctx, **kwargs)
 
