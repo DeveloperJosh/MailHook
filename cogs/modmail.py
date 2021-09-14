@@ -1,8 +1,9 @@
+from handlers.slash import SlashContext, slash_command
 import logging
 import discord
 import random
-import asyncio
 from io import BytesIO
+import asyncio
 from discord.ext import commands
 from utils.database import db
 from typing import List, Optional, Union
@@ -12,7 +13,7 @@ from config import (
 
 
 class modmail(commands.Cog, description="Yes"):
-    def __init__(self, bot: commands.AutoShardedBot):
+    def __init__(self, bot: commands.bot):
         self.bot = bot
         self.spam_prevention = commands.CooldownMapping.from_cooldown(6, 10, commands.BucketType.user)
         self.temp_blocked = []
@@ -107,6 +108,10 @@ class modmail(commands.Cog, description="Yes"):
         else:
             return
 
+    @commands.Cog.listener("on_member_join")
+    async def welcome(self, member):
+        return
+
     @commands.Cog.listener("on_message")
     async def prefix_reply(self, message: discord.Message):
         if message.author.bot:
@@ -173,6 +178,14 @@ class modmail(commands.Cog, description="Yes"):
             await user.send(f"{STAFF_EMOJI}`Staff Member`: {message_reply}", files=files)
             await ctx.message.delete()
             await webhook.send(f"{STAFF_EMOJI}`Staff Member`: {message_reply}", avatar_url=self.bot.user.display_avatar.url, files=files)
+
+    @slash_command(help="fucking kill me", guild_ids=[724357152285786112])
+    async def test(self, ctx: SlashContext, arg: str):
+        user = self.client.get_user(int(ctx.channel.topic))
+        #webhook = await bot.get_webhook(ctx.channel.id)
+        await user.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}")
+        await ctx.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}")
+        #await webhook.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}", avatar_url=self.bot.user.display_avatar.url, files=files)
 
     @commands.command(help='Block a user of from using the tickets')
     @commands.has_permissions(administrator=True)
