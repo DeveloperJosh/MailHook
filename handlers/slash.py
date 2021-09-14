@@ -4,7 +4,6 @@ import traceback
 from typing import Any, Dict, List, Union
 from inspect import getfullargspec
 from discord.ext import commands
-from utils.bot import EpicBot
 
 slash_cmd_option_types = {
     str: 3,
@@ -34,7 +33,7 @@ slash_cmd_option_converters = {
 
 
 class SlashContext(discord.Interaction):
-    def __init__(self, interaction: discord.Interaction, bot: EpicBot):
+    def __init__(self, interaction: discord.Interaction, bot: commands.Bot):
         super().__init__(data=interaction._raw_data, state=interaction._state)
         self._bot = bot
 
@@ -177,7 +176,7 @@ def get_option(name: str, options: List[SlashCommandOption]):
     raise ValueError(f'Option {name} not found')
 
 
-async def slash_handler(interaction: discord.Interaction, bot: EpicBot):
+async def slash_handler(interaction: discord.Interaction, bot: commands.Bot):
     class something(object):
         def __init__(self, client):
             self.client = client
@@ -215,7 +214,7 @@ async def slash_handler(interaction: discord.Interaction, bot: EpicBot):
         traceback.print_exception(type(e), e, e.__traceback__)
 
 
-async def update_app_commands(bot: EpicBot):
+async def update_app_commands(bot: commands.Bot):
     bot.slash_cmds = slash_cmds
     global_slash_cmds = []
     guild_slash_cmds: Dict[int, list] = {}
