@@ -10,7 +10,7 @@ from config import STAFF_EMOJI, MyHelp, PREFIXES, STATUS
 
 intents = discord.Intents(messages=True, guilds=True, reactions=True, members=True, presences=True)
 bot = commands.Bot(
-    owner_ids=[321750582912221184],
+    owner_ids=[739440618107043901],
     command_prefix=PREFIXES,
     intents=intents,
     case_insensitive=True,
