@@ -1,4 +1,3 @@
-from handlers.slash import SlashContext, slash_command
 import logging
 import discord
 import random
@@ -221,12 +220,6 @@ class modmail(commands.Cog, description="Yes"):
     async def github(self, ctx):
         embed = discord.Embed(title="Github", description="Star the code on [github](https://github.com/DeveloperJosh/Fish-Mail) it means a lot", color=discord.Color.blurple())
         await ctx.send(embed=embed)
-
-    @slash_command(name="reply", help="Reply to a ticket", guild_ids=[GUILD_ID])
-    async def _reply(self, ctx: SlashContext, arg: str):
-        user = self.bot.get_user(int(ctx.channel.topic))
-        await user.send(f"{STAFF_EMOJI}`{ctx.author.name}`: {arg}")
-        await ctx.reply(f'{STAFF_EMOJI}`{ctx.author.name}`: {arg}')
 
     @close.error
     async def close_error(self, ctx: commands.Context, error: commands.CommandError):
