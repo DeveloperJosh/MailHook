@@ -109,10 +109,6 @@ class modmail(commands.Cog, description="Yes"):
         else:
             return
 
-    @commands.Cog.listener("on_member_join")
-    async def welcome(self, member):
-        return
-
     @commands.Cog.listener("on_message")
     async def prefix_reply(self, message: discord.Message):
         if message.author.bot:
