@@ -39,3 +39,7 @@ class NotAdmin(CommandError):
 
 class NoBots(CommandError):
     pass
+
+
+class GuildOnlyPls(CommandError):
+    pass

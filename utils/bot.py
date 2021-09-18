@@ -18,7 +18,8 @@ class ModMail(commands.AutoShardedBot):
             case_insensitive=True,
             allowed_mentions=discord.AllowedMentions.none(),
             strip_after_prefix=True,
-            activity=discord.Activity(type=discord.ActivityType.playing, name=STATUS)
+            activity=discord.Activity(type=discord.ActivityType.watching, name=STATUS),
+            help_command=None
         )
         self.app_client = InteractionClient(self)
         self.mongo = Database(os.getenv('DATABASE_LINK'))

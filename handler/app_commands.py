@@ -313,7 +313,6 @@ async def message_command_handler(interaction: discord.Interaction, bot: command
         bot.dispatch('app_command_completion', ctx)
     except Exception as e:
         bot.dispatch('app_command_error', ctx, e)
-        traceback.print_exception(type(e), e, e.__traceback__)
 
 
 async def slash_command_handler(interaction: discord.Interaction, bot: commands.AutoShardedBot):
@@ -346,7 +345,6 @@ async def slash_command_handler(interaction: discord.Interaction, bot: commands.
         bot.dispatch('app_command_completion', ctx)
     except Exception as e:
         bot.dispatch('app_command_error', ctx, e)
-        traceback.print_exception(type(e), e, e.__traceback__)
 
 
 async def update_app_commands(bot: commands.AutoShardedBot):
