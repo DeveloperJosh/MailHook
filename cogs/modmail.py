@@ -1,10 +1,12 @@
 from handler import slash_command, user_command
 from handler import SlashCommandOption as Option
+from handler import SlashCommandChoice as Choice
 from cogs.error_handler import EphemeralContext
 from utils.exceptions import *
 from utils.ui import *
 from utils.message import wait_for_msg
 from utils.tickets_core import *
+from utils.converters import *
 
 
 dropdown_concurrency = []
@@ -58,6 +60,46 @@ class Mailhook(commands.Cog, name="Mail Hook"):
         final.update({"transcripts": transcripts.id})
         await self.bot.mongo.set_guild_data(ctx.guild.id, **final)
         await main_msg.edit(content="Setup complete.")
+
+    @commands.command(name='edit-config', help="Edit the current modmail configuration.")
+    @slash_command(name='edit-config', help="Edit the current modmail configuration.", options=[
+        Option(name="setting", type=3, description="Please select what you want to edit.", required=True, choices=[
+            Choice(name='Transcript Channel', value='transcripts_channel'),
+            Choice(name="Staff Role", value='staff_role'),
+            Choice(name='Modmail Category', value='category')
+        ])
+    ])
+    async def edit_config(self, ctx: Union[InteractionContext, commands.Context], setting: Optional[SettingConverter] = None):
+        if not ctx.guild:
+            raise GuildOnlyPls()
+        if not ctx.author.guild_permissions.administrator:
+            raise NotAdmin()
+        if setting is None:
+            return await ctx.reply(f"Please tell me what to edit!\nYour options: `transcripts_channel`, `staff_role`, `category`\nCorrect Usage: `{ctx.clean_prefix}edit-config <setting>`")
+        guild_data = await self.bot.mongo.get_guild_data(ctx.guild.id)
+        main_msg = await ctx.reply(f"Editing {setting.replace('_', '').title()}\n\nPlease enter a new value for it...")
+        main_msg = main_msg or await ctx.original_message()
+        new_msg = await wait_for_msg(ctx, 60, main_msg)
+        if not new_msg:
+            return
+        if setting == 'transcripts_channel':
+            try:
+                final = await commands.TextChannelConverter().convert(ctx, new_msg.content)
+            except:
+                return await main_msg.edit(f"I wasn't able to find any channel named `{new_msg.content}`\nPlease try again.")
+        elif setting == 'staff_role':
+            try:
+                final = await commands.RoleConverter().convert(ctx, new_msg.content)
+            except:
+                return await main_msg.edit(f"I wasn't able to find any role named `{new_msg.content}`\nPlease try again.")
+        else:
+            try:
+                final = await commands.CategoryChannelConverter().convert(ctx, new_msg.content)
+            except:
+                return await main_msg.edit(f"I wasn't able to find any category named `{new_msg.content}`\nPlease try again.")
+        wew = {setting.replace("_channel", ""): final.id}
+        await self.bot.mongo.set_guild_data(ctx.guild.id, **wew)
+        return await main_msg.edit(f"Updated!\nPlease use `/show-config` to see the new config.")
 
     @commands.command(name='show-config', help="Get the current config.")
     @slash_command(name='show-config', help="Get the current config.")
