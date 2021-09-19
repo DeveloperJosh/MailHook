@@ -25,6 +25,8 @@ class ModMail(commands.AutoShardedBot):
         self.mongo = Database(os.getenv('DATABASE_LINK'))
         self.load_extension("jishaku")
         self.load_cogs("./cogs_rewrite")
+        self.add_check(self.blacklist_check)
+        self.add_listener(self.connect_listener, 'on_connect')
 
     def load_cogs(self, path: str):
         i = 0
@@ -56,3 +58,11 @@ ___________.__       .__         _____         .__.__
         print(f"Connected to: {len(self.emojis)} emojis")
         print(f"Connected to: {len(self.voice_clients)} voice clients")
         print(f"Connected to: {len(self.private_channels)} private_channels")
+
+    async def blacklist_check(self, ctx: commands.Context):
+        if ctx.author.id in self.mongo.blacklist_cache:
+            return False
+        return True
+
+    async def connect_listener(self):
+        await self.mongo.get_blacklist_cache()

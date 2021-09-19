@@ -23,6 +23,8 @@ class ErrorHandling(commands.Cog):
             await ctx.reply(f"You are on cooldown for **{format_timespan(round(error.retry_after, 2))}**", delete_after=5)
         elif isinstance(error, commands.CommandNotFound):
             return
+        elif isinstance(error, commands.CheckFailure):
+            return
         elif isinstance(error, NotSetup):
             await ctx.reply("Looks like the server is not setup for modmail.\nPlease use `/setup` to set it up.")
         elif isinstance(error, NotStaff):
