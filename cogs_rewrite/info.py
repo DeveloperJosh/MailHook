@@ -1,5 +1,7 @@
+import time
 from handler import *
 from utils.bot import ModMail
+from cogs_rewrite.error_handler import EphemeralContext
 
 
 class Info(commands.Cog):
@@ -18,6 +20,26 @@ class Info(commands.Cog):
         embed.add_field(name="Code Developer(s)", value="`Blue.#1270`", inline=False)
         embed.add_field(name="Helper(s)", value="`Nirlep_5252_#9798, SylmFox#3635`", inline=False)
         await ctx.reply(embed=embed)
+
+    @commands.command(name="ping", help="Pong!")
+    @slash_command(name="ping", help="Pong!")
+    async def ping(self, ctx: Union[commands.Context, InteractionContext]):
+        if isinstance(ctx, InteractionContext):
+            ctx = EphemeralContext(ctx, self.bot)
+        api_ping = round(self.bot.latency * 1000, 2)
+        db_base_time = time.perf_counter()
+        await self.bot.mongo.get_user_modmail_thread(69420)
+        db_ping = round((time.perf_counter() - db_base_time) * 1000, 2)
+        base_time = time.perf_counter()
+        await ctx.reply(embed=discord.Embed(
+            title="Pong!",
+            description=f"""
+**API Ping:** {api_ping}ms
+**Bot Ping:** {round((time.perf_counter() - base_time) * 1000, 2)}ms
+**DB Ping:** {db_ping}ms
+""",
+            color=discord.Color.blurple()
+        ))
 
 
 def setup(bot):
