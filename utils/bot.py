@@ -41,7 +41,6 @@ class ModMail(commands.AutoShardedBot):
 
     async def on_ready(self):
         print("""
-
   __  __       _ _ _    _             _    
  |  \/  |     (_) | |  | |           | |   
  | \  / | __ _ _| | |__| | ___   ___ | | __

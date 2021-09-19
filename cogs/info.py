@@ -17,8 +17,9 @@ class Info(commands.Cog):
     @slash_command(name="credits", help="Credits to our contributors and helpers!")
     async def credits(self, ctx: Union[commands.Context, InteractionContext]):
         embed = discord.Embed(title="Credits", color=discord.Color.blurple()).set_footer(text="The code for this bot was made by Blue.#1270")
-        embed.add_field(name="Code Developer(s)", value="`Blue.#1270`", inline=False)
-        embed.add_field(name="Helper(s)", value="`Nirlep_5252_#9798, SylmFox#3635`", inline=False)
+        embed.add_field(name="Owner", value="`Blue.#1270`", inline=False)
+        embed.add_field(name="Developer(s)", value="`Nirlep_5252_#9798`", inline=False)
+        embed.add_field(name="Helper(s)", value="`SylmFox#2643`", inline=False)
         await ctx.reply(embed=embed)
 
     @commands.command(name="ping", help="Pong!")
