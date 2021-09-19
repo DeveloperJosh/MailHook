@@ -24,14 +24,14 @@ class Info(commands.Cog):
     @commands.command(name="ping", help="Pong!")
     @slash_command(name="ping", help="Pong!")
     async def ping(self, ctx: Union[commands.Context, InteractionContext]):
-        if isinstance(ctx, InteractionContext):
-            ctx = EphemeralContext(ctx, self.bot)
         api_ping = round(self.bot.latency * 1000, 2)
         db_base_time = time.perf_counter()
         await self.bot.mongo.get_user_modmail_thread(69420)
         db_ping = round((time.perf_counter() - db_base_time) * 1000, 2)
         base_time = time.perf_counter()
-        await ctx.reply(embed=discord.Embed(
+        msg = await ctx.reply("Pinging...")
+        msg = msg or await ctx.original_message()
+        await msg.edit(content="UwU!~", embed=discord.Embed(
             title="Pong!",
             description=f"""
 **API Ping:** {api_ping}ms
