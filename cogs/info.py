@@ -11,7 +11,7 @@ class Info(commands.Cog):
     @commands.command(name="github", help="The github repo to my source code.")
     @slash_command(name="github", help="The github repo to my source code.")
     async def github(self, ctx: Union[commands.Context, InteractionContext]):
-        await ctx.reply(embed=discord.Embed(title="Github", description="Star the code on [github](https://github.com/DeveloperJosh/Fish-Mail) it means a lot", color=discord.Color.blurple()))
+        await ctx.reply(embed=discord.Embed(title="Github", description="Star the code on [github](https://github.com/DeveloperJosh/MailHook/) it means a lot", color=discord.Color.blurple()))
 
     @commands.command(name="credits", help="Credits to our contributors and helpers!")
     @slash_command(name="credits", help="Credits to our contributors and helpers!")
