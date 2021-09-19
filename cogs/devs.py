@@ -59,7 +59,7 @@ If you are a server admin then please run the `/setup` slash command to get star
 Here are some useful links:
 
 - [Support server](https://discord.gg/TeSHENet9M_)
-- [Github](https://github.com/developerjosh/fish-Mail/)
+- [Github](https://github.com/DeveloperJosh/MailHook/)
 
 """,
             color=discord.Color.blurple()
