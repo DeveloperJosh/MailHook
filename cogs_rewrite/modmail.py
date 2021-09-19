@@ -1,5 +1,6 @@
 from handler import slash_command, user_command
 from handler import SlashCommandOption as Option
+from cogs_rewrite.error_handler import EphemeralContext
 from utils.exceptions import *
 from utils.ui import *
 from utils.message import wait_for_msg
@@ -9,7 +10,7 @@ from utils.tickets_core import *
 dropdown_concurrency = []
 
 
-class ModMailCog(commands.Cog, name="MailHook"):
+class Mailhook(commands.Cog, name="Mail Hook"):
     def __init__(self, bot: ModMail):
         self.bot = bot
 
@@ -168,6 +169,8 @@ All your messages will be send to the staff team.
     async def modmail_dm(self, message: discord.Message):
         if message.author.bot:
             return
+        if message.author.id in self.bot.mongo.blacklist_cache:
+            return
         if message.guild is not None:
             return
         ctx = await self.bot.get_context(message)
@@ -176,11 +179,21 @@ All your messages will be send to the staff team.
         modmail_thread = await self.bot.mongo.get_user_modmail_thread(message.author.id)
         if modmail_thread is None:
             mutual_guilds = message.author.mutual_guilds
-            if len(mutual_guilds) == 0:
-                final_guild = mutual_guilds[0]
+            final_mutual_guilds: Dict[discord.Guild, dict] = {}
+            for guild in mutual_guilds:
+                try:
+                    guild_data = await self.bot.mongo.get_guild_data(guild.id)
+                    final_mutual_guilds.update({guild: guild_data})
+                except NotSetup:
+                    pass
+            if len(final_mutual_guilds) == 0:
+                return
+            if len(final_mutual_guilds) == 1:
+                for g in final_mutual_guilds:
+                    final_guild = g
             else:
                 view = ServersDropdownView()
-                select = ServersDropdown(mutual_guilds)
+                select = ServersDropdown(list(final_mutual_guilds))
                 view.add_item(select)
                 main_msg = await message.channel.send(f"Hey looks like you want to start a modmail thread.\nIf so, please select a server you want to contact and continue.", view=view)
                 dropdown_concurrency.append(message.author.id)
@@ -195,8 +208,11 @@ All your messages will be send to the staff team.
             if not confirm.value:
                 return await m.delete()
             await m.edit(view=None)
-            dropdown_concurrency.remove(message.author.id)
+            if message.author.id in dropdown_concurrency:
+                dropdown_concurrency.remove(message.author.id)
             channel = await start_modmail_thread(self.bot, final_guild.id, message.author.id)
+            role = final_guild.get_role(final_mutual_guilds[final_guild]['staff_role'])
+            await channel.send(f"{role.mention if role is not None else 'Hey moderators,'} {message.author.mention} has opened a modmail thread.", allowed_mentions=discord.AllowedMentions.all())
         else:
             channel = self.bot.get_channel(modmail_thread['channel_id'])
         if channel is None:
@@ -208,6 +224,8 @@ All your messages will be send to the staff team.
     @commands.Cog.listener('on_message')
     async def modmail_reply(self, message: discord.Message):
         if message.author.bot:
+            return
+        if message.author.id in self.bot.mongo.blacklist_cache:
             return
         if message.guild is None:
             return
@@ -247,6 +265,30 @@ All your messages will be send to the staff team.
         )
         await message.add_reaction('✔️')
 
+    @commands.command(name='anon-reply', help="Reply anonymously to a ticket.")
+    @slash_command(name="anon-reply", help="Reply anonymously to a ticket.")
+    async def areply(self, ctx: InteractionContext, message: str):
+        if not ctx.guild:
+            raise GuildOnlyPls()
+        guild_data = await self.bot.mongo.get_guild_data(ctx.guild.id)
+        if ctx.guild.get_role(guild_data['staff_role']) not in ctx.author.roles:
+            raise NotStaff()
+        if isinstance(ctx, InteractionContext):
+            ctx = EphemeralContext(ctx, self.bot)
+        ticket_data = await self.bot.mongo.get_channel_modmail_thread(ctx.channel.id)
+        if ticket_data is None:
+            return await ctx.reply("This doesn't look like an active modmail thread.\nPlease use `/modmail-tickets` to view all the modmail threads.")
+        user = self.bot.get_user(ticket_data['_id'])
+        try:
+            await user.send(message, embed=discord.Embed().set_author(name="Anonymous reply.").set_footer(text=f"Server: {ctx.guild.name}"))
+            await send_modmail_message(self.bot, ctx.channel, message, anon=True)
+            if isinstance(ctx, commands.Context):
+                await ctx.message.delete()
+            else:
+                await ctx.reply("Message sent!")
+        except Exception as e:
+            await ctx.reply(f"Unable to send message due to error: `{e}`")
+
 
 def setup(bot: ModMail):
-    bot.add_cog(ModMailCog(bot))
+    bot.add_cog(Mailhook(bot))
