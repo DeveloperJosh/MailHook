@@ -5,34 +5,45 @@ from config import PREFIXES
 
 async def get_bot_help(bot: ModMail) -> discord.Embed:
     embed = discord.Embed(
-        title="Modmail Help",
-        description=f"My prefixes for are: {', '.join(['`'+p+'`' for p in PREFIXES])}\nI recommend using my slash commands.\nIn order to setup this server please use the `/setup` command.",
+        description=f"My prefixes for are: {', '.join(['`'+p+'`' for p in PREFIXES])}.",
         color=discord.Color.blurple()
-    )
+    ).set_author(icon_url=bot.user.display_avatar.url, name="MailHook Help")
     for cog_name, cog in bot.cogs.items():
-        if len(cog.get_commands()) > 0 and cog.qualified_name not in ["Jishaku", "Help"]:
+        if len(cog.get_commands()) > 0 and cog.qualified_name not in ["Jishaku", "Help", "Devs"]:
             embed.add_field(
                 name=cog.qualified_name,
-                value=', '.join([command.qualified_name for command in cog.get_commands()]),
+                value='\n'.join(['`'+command.qualified_name+f'` - {command.help}' for command in cog.get_commands()]),
                 inline=False
             )
-    return embed
+    return embed.add_field(
+        name="‎",
+        value=f"[Invite Me](https://discord.com/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands) | [Support Server](https://discord.gg/TeSHENet9M)",
+        inline=False
+    )
 
 
-async def get_cog_help(cog: commands.Cog) -> discord.Embed:
+async def get_cog_help(bot: ModMail, cog: commands.Cog) -> discord.Embed:
     return discord.Embed(
         title=f"{cog.qualified_name} Help",
         description='\n'.join([f"`/{c.qualified_name}{' ' + c.signature if c.signature else ''}` - {c.help}" for c in cog.get_commands()]),
         color=discord.Color.blurple()
+    ).add_field(
+        name="‎",
+        value=f"[Invite Me](https://discord.com/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands) | [Support Server](https://discord.gg/TeSHENet9M)",
+        inline=False
     )
 
 
-async def get_command_help(c: commands.Command) -> discord.Embed:
+async def get_command_help(bot, c: commands.Command) -> discord.Embed:
     return discord.Embed(
         title=f"{c.qualified_name.title()} Help",
         description=c.help,
         color=discord.Color.blurple()
-    ).add_field(name="Usage:", value=f"```/{c.qualified_name}{' ' + c.signature if c.signature else ''}```")
+    ).add_field(name="Usage:", value=f"```/{c.qualified_name}{' ' + c.signature if c.signature else ''}```").add_field(
+        name="‎",
+        value=f"[Invite Me](https://discord.com/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands) | [Support Server](https://discord.gg/TeSHENet9M)",
+        inline=False
+    )
 
 
 class Help(commands.Cog):
@@ -46,10 +57,10 @@ class Help(commands.Cog):
             return await ctx.reply(embed=await get_bot_help(self.bot))
         maybe_cog = self.bot.get_cog(command.lower().title())
         if maybe_cog is not None:
-            return await ctx.reply(embed=await get_cog_help(maybe_cog))
+            return await ctx.reply(embed=await get_cog_help(self.bot, maybe_cog))
         maybe_command = self.bot.get_command(command.lower())
         if maybe_command is not None:
-            return await ctx.reply(embed=await get_command_help(maybe_command))
+            return await ctx.reply(embed=await get_command_help(self.bot, maybe_command))
         return await ctx.reply(f"No command named `{command}` found.")
 
 
