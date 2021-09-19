@@ -1,7 +1,7 @@
 import discord
 from discord.ext import commands
 from utils.bot import ModMail
-from typing import Optional, Dict
+from typing import Optional, Dict, Union
 from utils.exceptions import UserAlreadyInAModmailThread
 from io import BytesIO
 
@@ -26,19 +26,19 @@ async def start_modmail_thread(bot: ModMail, guild_id: int, user_id: int, guild_
     return channel
 
 
-async def send_modmail_message(bot: ModMail, channel: discord.TextChannel, message: discord.Message):
+async def send_modmail_message(bot: ModMail, channel: discord.TextChannel, message: Union[discord.Message, str], anon: bool = False):
     webhook = await get_webhook(bot, channel.id)
     embeds = [discord.Embed(
         title=sticker.name,
         url=sticker.url,
         color=discord.Color.blurple(),
         description=f"Sticker ID: `{sticker.id}`"
-    ).set_image(url=sticker.url) for sticker in message.stickers]
+    ).set_image(url=sticker.url) for sticker in (message.stickers if isinstance(message, discord.Message) else [])]
     await webhook.send(
-        content=message.content,
-        username=f"{message.author}",
-        avatar_url=message.author.display_avatar.url,
-        files=[await attachment.to_file() for attachment in message.attachments],
+        content=message.content if isinstance(message, discord.Message) else message,
+        username=(f"{message.author}" if not anon else "Anonymous Reply") if isinstance(message, discord.Message) else "Anonymous Reply",
+        avatar_url=(message.author.display_avatar.url if not anon else bot.user.display_avatar.url) if isinstance(message, discord.Message) else bot.user.display_avatar.url,
+        files=[await attachment.to_file() for attachment in message.attachments] if isinstance(message, discord.Message) else [],
         allowed_mentions=discord.AllowedMentions.none(),
         embeds=embeds
     )
@@ -65,7 +65,7 @@ async def prepare_transcript(bot: ModMail, channel_id: int, guild_id: int, guild
     if transcript_channel is None:
         return
     text = ""
-    all_msgs = await transcript_channel.history(limit=None).flatten()
+    all_msgs = await channel.history(limit=None).flatten()
     for msg in all_msgs:
         text += f"{msg.author} (ID: {msg.author.id}) (Msg ID: {msg.id}): {msg.content}\n\n"  # TODO: attachments and stickers
     file = discord.File(BytesIO(text.encode("utf-8")), filename=f"{channel.name}.txt")
