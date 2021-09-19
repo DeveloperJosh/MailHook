@@ -24,7 +24,7 @@ class ModMail(commands.AutoShardedBot):
         self.app_client = InteractionClient(self)
         self.mongo = Database(os.getenv('DATABASE_LINK'))
         self.load_extension("jishaku")
-        self.load_cogs("./cogs_rewrite")
+        self.load_cogs("./cogs")
         self.add_check(self.blacklist_check)
         self.add_listener(self.connect_listener, 'on_connect')
 

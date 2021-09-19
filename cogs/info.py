@@ -1,7 +1,7 @@
 import time
 from handler import *
 from utils.bot import ModMail
-from cogs_rewrite.error_handler import EphemeralContext
+from cogs.error_handler import EphemeralContext
 
 
 class Info(commands.Cog):

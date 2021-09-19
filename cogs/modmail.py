@@ -1,6 +1,6 @@
 from handler import slash_command, user_command
 from handler import SlashCommandOption as Option
-from cogs_rewrite.error_handler import EphemeralContext
+from cogs.error_handler import EphemeralContext
 from utils.exceptions import *
 from utils.ui import *
 from utils.message import wait_for_msg
