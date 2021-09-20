@@ -6,3 +6,4 @@ motor
 asyncio
 dnspython
 humanfriendly
+pygit2
