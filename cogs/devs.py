@@ -1,6 +1,9 @@
-from handler import *
+import discord
+from handler import InteractionContext
+from typing import Union
 from utils.bot import ModMail
-from config import LOG_CHANNELS, OWNERS
+from config import LOG_CHANNELS
+from discord.ext import commands
 
 
 class Devs(commands.Cog):
@@ -50,8 +53,8 @@ class Devs(commands.Cog):
     @commands.Cog.listener('on_guild_join')
     async def on_guild_join(self, guild: discord.Guild):
         send_embed = discord.Embed(
-            title=f"👋 Hey there!",
-            description=f"""
+            title="👋 Hey there!",
+            description="""
 Thanks a lot for inviting me!
 You can set me up to collect DMs from members and send them directly to your staff them.
 If you are a server admin then please run the `/setup` slash command to get started.

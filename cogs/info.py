@@ -1,7 +1,9 @@
 import time
-from handler import *
+import discord
+from discord.ext import commands
+from handler import slash_command, InteractionContext
 from utils.bot import ModMail
-from cogs.error_handler import EphemeralContext
+from typing import Union
 
 
 class Info(commands.Cog):
