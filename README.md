@@ -1,71 +1,91 @@
-# Fish-Mail
-The mod mail bot for Fish Hosting\
-Note: You are not allowed to remove the names in the credit command\
-Note: If you want any ideas/commands added to the bot please tell me [here](https://github.com/DeveloperJosh/Fish-Mail/discussions/2)\
-Note: If you need help with the setup [join our discord](https://discord.gg/j99syeQDQk)\
-Note: **The Fish Mail Team is getting a new name and making the mod mail public**
+<h1 align="center"> <img src="
+https://cdn.discordapp.com/attachments/859335247547990026/889351484116983818/icons8-mail-96.png"> </h1>
 
-## Installing Modules
-Run in command prompt
+<h1 align="center"> MailHook </h1>
+<h3 align="center"> Modern modmail for modern Discord servers. </h3>
+
+## 🎉 Features
+
+- Full slash commands and context menu commands support.
+- Per guild configuration.
+- Fast response time.
+
+## 💻 How to selfhost?
+
+1. Close the repo:
+    ```bash
+    $ git clone https://github.com/DeveloperJosh/MailHook
+    ```
+
+2. Install Modules.
+
+    ```bash
+    # Linux/macOS
+    $ python3 -m pip install -r requirements.txt
+
+    # Windows
+    $ py -3 -m pip install -r requirements.txt
+    ```
+
+3. Setup the `config.py` file:
+    ```py
+    STAFF_EMOJI='emoji'
+    PREFIXES=['<', '?']
+    STATUS='My Dms'
+    OWNERS = [your discord id]
+    LOG_CHANNELS = {
+        'cmd_logs': channel id,
+        'cmd_errors': channel id,
+        'event_errors': channel id
+    }
+    ```
+
+4. Setup the a `.env` file:
+    ```
+    DISCORD_BOT_SECRET=Token here
+    DATABASE_LINK=Mongo link
+    ```
+    MongoDB - https://www.mongodb.com/ \
+    Discord bot token - https://discord.com/developers/applications
+
+5. Run the bot:
+    ```bash
+    # Linux/MacOS
+    $ python3 main.py
+
+    # Windows
+    $ py main.py
+    ```
+
+6. Enjoy:
+    ![](https://cdn.discordapp.com/attachments/859335247547990026/889350297590333520/unknown.png)
+
+## 🤝 Selfhosting agreement
+
+
+- You are not allowed to remove the names in the credit command.
+- You are not allowed to use the name or the logo of the original bot.
+- If you want any ideas/commands added to the bot please tell me [here](https://github.com/DeveloperJosh/MailHook/discussions/2)
+- If you need help with the setup [join our discord](https://discord.gg/j99syeQDQk)
+
+## 🖥️ Commands
 ```
-# Linux/macOS
-python3 -m pip install -r requirements.txt
-
-# Windows
-py -3 -m pip install -r requirements.txt
+/setup - Setup modmail for your server.
+/edit-config - Edit the current modmail configuration.
+/show-config - Get the current config.
+/start-ticket - Start a ticket with a user.
+/close-ticket - Close this ticket.
+/modmail-tickets - View all the current modmail tickets.
+/anon-reply - Reply anonymously to a ticket.
 ```
 
-## Make sure to have these on
-![](https://media.discordapp.net/attachments/877208401111838790/883784891634970624/unknown.png)
-Turn them on here [here](https://discord.com/developers/applications)
+## 👀 Preview
 
-## How to set up
-Make a .env file, Just like this
+![](https://cdn.discordapp.com/attachments/859335247547990026/889355567339028490/unknown.png)
+![](https://cdn.discordapp.com/attachments/859335247547990026/889355834746867783/unknown.png)
+![](https://cdn.discordapp.com/attachments/859335247547990026/889355924819542057/unknown.png)
 
-```
-DISCORD_BOT_SECRET=Token here
-DATABASE_LINK=Mongo link
-```
+## 🔗 Useful Links
 
-You can get a mongo link [here](https://www.mongodb.com/)
-
-## Setting up config.py
-```py
-TICKET_CATEGORY=#category for the tickets
-GUILD_ID=#server id
-STAFF_ROLE=#staff role id
-STAFF_EMOJI='emoji'
-PREFIXES=['<', '?']
-STATUS='My Dms'
-```
-
-## How to run
-
-```py
-# Linux/MacOS
-python3 main.py
-
-# Windows
-py main.py
-```
-## Running 
-This is what you should see when the bot is running
-![](https://cdn.discordapp.com/attachments/877208401111838790/884126144335589396/unknown.png)
-
-## Commands
-```
-?close [reason]
-?reply [message]
-?areply [message]
-?block [user]
-?unblock [user]
-```
-
-## Images
-
-![](https://cdn.discordapp.com/attachments/885295587438772236/885295940519477339/unknown.png)
-![](https://cdn.discordapp.com/attachments/885295587438772236/885296154387025920/unknown.png)
-![](https://cdn.discordapp.com/attachments/885295587438772236/885296399170822144/unknown.png)
-
-## If you need help
-You can add me on discord my username is Blue.#1270 **DO NOT ADD ME WITHOUT A REASON**
+- [Support Server](https://discord.gg/TeSHENet9M)
+- [Invite Me](https://discord.com/oauth2/authorize?client_id=781639675868872796&permissions=8&scope=bot%20applications.commands)
