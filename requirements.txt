@@ -1,7 +1,6 @@
 git+https://github.com/Nirlep5252/discord.py
 git+https://github.com/Gorialis/jishaku@master
 python-dotenv
-pytimeparse
 pymongo
 motor
 asyncio
