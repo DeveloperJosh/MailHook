@@ -83,15 +83,24 @@ Other links:
             value=get_commits(),
             inline=False
         ).set_footer(text=self.bot.user.name, icon_url=self.bot.user.display_avatar.url
-        ).set_author(name=self.bot.user.name, icon_url=self.bot.user.display_avatar.url))
+        ).set_author(name=self.bot.user.name, icon_url=self.bot.user.display_avatar.url
+        ).set_thumbnail(url=self.bot.user.display_avatar.url))
 
     @commands.command(name="credits", help="Credits to our contributors and helpers!")
     @slash_command(name="credits", help="Credits to our contributors and helpers!")
     async def credits(self, ctx: Union[commands.Context, InteractionContext]):
-        embed = discord.Embed(title="Credits", color=discord.Color.blurple()).set_footer(text="The code for this bot was made by Blue.#1270")
-        embed.add_field(name="Owner", value="`Blue.#1270`", inline=False)
-        embed.add_field(name="Developer(s)", value="`Nirlep_5252_#9798`", inline=False)
-        embed.add_field(name="Helper(s)", value="`SylmFox#2643`", inline=False)
+        embed = discord.Embed(
+            title="MailHook Credits",
+            description="""
+**Owner:** [`Blue.#1270`](https://discord.com/users/321750582912221184)
+**Developer:** [`Nirlep_5252_#9798`](https://discord.com/users/558861606063308822)
+**Contributor(s):** [`SylmFox#2643`](https://discord.com/users/739440618107043901)
+
+**Github:** https://github.com/DeveloperJosh/MailHook
+            """,
+            color=discord.Color.blurple()
+        ).set_author(name=self.bot.user.name, icon_url=self.bot.user.display_avatar.url
+        ).set_thumbnail(url=self.bot.user.display_avatar.url)
         await ctx.reply(embed=embed)
 
     @commands.command(name="ping", help="Pong!")
