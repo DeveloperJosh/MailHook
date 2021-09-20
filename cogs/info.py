@@ -15,6 +15,21 @@ class Info(commands.Cog):
     async def github(self, ctx: Union[commands.Context, InteractionContext]):
         await ctx.reply(embed=discord.Embed(title="Github", description="Star the code on [github](https://github.com/DeveloperJosh/MailHook/) it means a lot", color=discord.Color.blurple()))
 
+    @commands.command(name="invite", help="Invite me to your server uwu")
+    @slash_command(name="invite", help="Invite me to your server uwu")
+    async def invite(self, ctx: Union[commands.Context, InteractionContext]):
+        await ctx.reply(embed=discord.Embed(
+            title="Click me to invite!",
+            description="""
+Other links:
+
+- [Support Server](https://discord.gg/TeSHENet9M)
+- [Github](https://github.com/DeveloperJosh/MailHook)
+                    """,
+            url=f"https://discord.com/oauth2/authorize?client_id={self.bot.user.id}&permissions=8&scope=bot%20applications.commands",
+            color=discord.Color.blurple()
+        ))
+
     @commands.command(name="credits", help="Credits to our contributors and helpers!")
     @slash_command(name="credits", help="Credits to our contributors and helpers!")
     async def credits(self, ctx: Union[commands.Context, InteractionContext]):
