@@ -19,7 +19,7 @@ class Info(commands.Cog):
     @slash_command(name="invite", help="Invite me to your server uwu")
     async def invite(self, ctx: Union[commands.Context, InteractionContext]):
         await ctx.reply(embed=discord.Embed(
-            title="Click me to invite!",
+            title="🔗 Click me to invite!",
             description="""
 Other links:
 
@@ -28,7 +28,7 @@ Other links:
                     """,
             url=f"https://discord.com/oauth2/authorize?client_id={self.bot.user.id}&permissions=8&scope=bot%20applications.commands",
             color=discord.Color.blurple()
-        ))
+        ).set_footer(text="Thank you very much! 💖"))
 
     @commands.command(name="credits", help="Credits to our contributors and helpers!")
     @slash_command(name="credits", help="Credits to our contributors and helpers!")
