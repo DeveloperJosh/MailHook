@@ -1,12 +1,16 @@
-from handler import slash_command, user_command
+import discord
+from discord.ext import commands
+from typing import Union, Optional, Dict
+from handler import slash_command, user_command, InteractionContext
 from handler import SlashCommandOption as Option
 from handler import SlashCommandChoice as Choice
 from cogs.error_handler import EphemeralContext
-from utils.exceptions import *
-from utils.ui import *
+from utils.exceptions import GuildOnlyPls, NotAdmin, NotSetup, NoBots, NotStaff, ModRoleNotFound, TicketCategoryNotFound, DMsDisabled
+from utils.bot import ModMail
+from utils.ui import ServersDropdown, ServersDropdownView, Confirm
 from utils.message import wait_for_msg
-from utils.tickets_core import *
-from utils.converters import *
+from utils.tickets_core import start_modmail_thread, get_webhook, prepare_transcript, send_modmail_message
+from utils.converters import SettingConverter
 
 
 dropdown_concurrency = []
@@ -30,7 +34,7 @@ class Mailhook(commands.Cog, name="Mail Hook"):
         except NotSetup:
             pass
         final = {}
-        main_msg = await ctx.reply(f"Modmail setup!\n\nPlease enter a staff role.\nThis will be the role that will be able to access modmail channels and use the modmail commands.")
+        main_msg = await ctx.reply("Modmail setup!\n\nPlease enter a staff role.\nThis will be the role that will be able to access modmail channels and use the modmail commands.")
         main_msg = main_msg or await ctx.original_message()
         staff_role_msg = await wait_for_msg(ctx, 60, main_msg)
         if staff_role_msg is None:
@@ -38,15 +42,15 @@ class Mailhook(commands.Cog, name="Mail Hook"):
         try:
             staff_role = await commands.RoleConverter().convert(ctx, staff_role_msg.content)
             if staff_role.position >= ctx.guild.me.top_role.position:
-                return await main_msg.edit(content=f"Hey, that role seems to be above my top role.\nPlease give me a higher role and try again.")
+                return await main_msg.edit(content="Hey, that role seems to be above my top role.\nPlease give me a higher role and try again.")
             final.update({"staff_role": staff_role.id})
         except commands.RoleNotFound:
-            return await main_msg.edit(content=f"That doesn't seem like a role.\nPlease re-run the command and try again.")
+            return await main_msg.edit(content="That doesn't seem like a role.\nPlease re-run the command and try again.")
         overwrites = {
             ctx.guild.default_role: discord.PermissionOverwrite(read_messages=False),
             staff_role: discord.PermissionOverwrite(read_messages=True)
         }
-        await main_msg.edit(content=f"Modmail setup!\n\nPlease enter a category channel.\nThis will be the modmail category under which the modmail channels will be created.")
+        await main_msg.edit(content="Modmail setup!\n\nPlease enter a category channel.\nThis will be the modmail category under which the modmail channels will be created.")
         category_msg = await wait_for_msg(ctx, 60, main_msg)
         if category_msg is None:
             return
@@ -54,7 +58,7 @@ class Mailhook(commands.Cog, name="Mail Hook"):
             category = await commands.CategoryChannelConverter().convert(ctx, category_msg.content)
             final.update({"category": category.id})
         except commands.ChannelNotFound:
-            return await main_msg.edit(f"I wasn't able to find that category.\nPlease re-run the command and try again.")
+            return await main_msg.edit("I wasn't able to find that category.\nPlease re-run the command and try again.")
         await category.edit(overwrites=overwrites)
         transcripts = await category.create_text_channel('transcripts', topic="Modmail transcripts will be saved here.", overwrites=overwrites)
         final.update({"transcripts": transcripts.id})
@@ -76,7 +80,7 @@ class Mailhook(commands.Cog, name="Mail Hook"):
             raise NotAdmin()
         if setting is None:
             return await ctx.reply(f"Please tell me what to edit!\nYour options: `transcripts_channel`, `staff_role`, `category`\nCorrect Usage: `{ctx.clean_prefix}edit-config <setting>`")
-        guild_data = await self.bot.mongo.get_guild_data(ctx.guild.id)
+        await self.bot.mongo.get_guild_data(ctx.guild.id)
         main_msg = await ctx.reply(f"Editing {setting.replace('_', '').title()}\n\nPlease enter a new value for it...")
         main_msg = main_msg or await ctx.original_message()
         new_msg = await wait_for_msg(ctx, 60, main_msg)
@@ -85,21 +89,21 @@ class Mailhook(commands.Cog, name="Mail Hook"):
         if setting == 'transcripts_channel':
             try:
                 final = await commands.TextChannelConverter().convert(ctx, new_msg.content)
-            except:
+            except Exception:
                 return await main_msg.edit(f"I wasn't able to find any channel named `{new_msg.content}`\nPlease try again.")
         elif setting == 'staff_role':
             try:
                 final = await commands.RoleConverter().convert(ctx, new_msg.content)
-            except:
+            except Exception:
                 return await main_msg.edit(f"I wasn't able to find any role named `{new_msg.content}`\nPlease try again.")
         else:
             try:
                 final = await commands.CategoryChannelConverter().convert(ctx, new_msg.content)
-            except:
+            except Exception:
                 return await main_msg.edit(f"I wasn't able to find any category named `{new_msg.content}`\nPlease try again.")
         wew = {setting.replace("_channel", ""): final.id}
         await self.bot.mongo.set_guild_data(ctx.guild.id, **wew)
-        return await main_msg.edit(f"Updated!\nPlease use `/show-config` to see the new config.")
+        return await main_msg.edit(content="Updated!\nPlease use `/show-config` to see the new config.")
 
     @commands.command(name='show-config', help="Get the current config.")
     @slash_command(name='show-config', help="Get the current config.")
@@ -237,7 +241,7 @@ All your messages will be send to the staff team.
                 view = ServersDropdownView()
                 select = ServersDropdown(list(final_mutual_guilds))
                 view.add_item(select)
-                main_msg = await message.channel.send(f"Hey looks like you want to start a modmail thread.\nIf so, please select a server you want to contact and continue.", view=view)
+                main_msg = await message.channel.send("Hey looks like you want to start a modmail thread.\nIf so, please select a server you want to contact and continue.", view=view)
                 dropdown_concurrency.append(message.author.id)
                 await view.wait()
                 if not view.yes:
@@ -258,7 +262,7 @@ All your messages will be send to the staff team.
         else:
             channel = self.bot.get_channel(modmail_thread['channel_id'])
         if channel is None:
-            await message.channel.send(f"Looks like the modmail thread no longer exists.\nPlease send the message again to start a new one.")
+            await message.channel.send("Looks like the modmail thread no longer exists.\nPlease send the message again to start a new one.")
             return await self.bot.mongo.delete_user_modmail_thread(message.author.id)
         await send_modmail_message(self.bot, channel, message)
         await message.add_reaction('✔️')

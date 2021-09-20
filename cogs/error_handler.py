@@ -1,8 +1,14 @@
 import traceback
 from discord.ext import commands
 from handler import InteractionContext
-from utils.exceptions import *
+from utils.exceptions import (
+    NotSetup, NotStaff, NotAdmin, ModRoleNotFound,
+    TicketCategoryNotFound, TranscriptChannelNotFound,
+    UserAlreadyInAModmailThread, DMsDisabled, NoBots,
+    GuildOnlyPls
+)
 from utils.bot import ModMail
+from typing import Union
 from humanfriendly import format_timespan
 
 

@@ -1,6 +1,9 @@
-from handler import *
+import discord
+from discord.ext import commands
+from handler import slash_command, InteractionContext
 from utils.bot import ModMail
 from config import PREFIXES
+from typing import Union
 
 
 async def get_bot_help(bot: ModMail) -> discord.Embed:
@@ -12,7 +15,7 @@ async def get_bot_help(bot: ModMail) -> discord.Embed:
         if len(cog.get_commands()) > 0 and cog.qualified_name not in ["Jishaku", "Help", "Devs"]:
             embed.add_field(
                 name=cog.qualified_name,
-                value='\n'.join(['`'+command.qualified_name+f'` - {command.help}' for command in cog.get_commands()]),
+                value='\n'.join(['`' + command.qualified_name + f'` - {command.help}' for command in cog.get_commands()]),
                 inline=False
             )
     return embed.add_field(
