@@ -78,10 +78,6 @@ Other links:
 - [Invite](https://discordapp.com/oauth2/authorize?client_id={self.bot.user.id}&permissions=8&scope=bot%20applications.commands)
             """,
             inline=True
-        ).add_field(
-            name="Latest Commits:",
-            value=get_commits(),
-            inline=False
         ).set_footer(text=self.bot.user.name, icon_url=self.bot.user.display_avatar.url
         ).set_author(name=self.bot.user.name, icon_url=self.bot.user.display_avatar.url
         ).set_thumbnail(url=self.bot.user.display_avatar.url))
