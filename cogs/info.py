@@ -10,24 +10,23 @@ from utils.bot import ModMail
 from typing import Union
 
 
-#def format_commit(commit: pygit2.Commit) -> str:
+def format_commit(commit: pygit2.Commit) -> str:
     # CREDITS: https://github.com/Rapptz/RoboDanny
-#    short, _, _ = commit.message.partition('\n')
-#    short_sha2 = commit.hex[0:6]
-#    commit_tz = datetime.timezone(datetime.timedelta(minutes=commit.commit_time_offset))
-#    commit_time = datetime.datetime.fromtimestamp(
-#        commit.commit_time).astimezone(commit_tz)
+    short, _, _ = commit.message.partition('\n')
+    short_sha2 = commit.hex[0:6]
+    commit_tz = datetime.timezone(datetime.timedelta(minutes=commit.commit_time_offset))
+    commit_time = datetime.datetime.fromtimestamp(
+        commit.commit_time).astimezone(commit_tz)
 
- #   offset = f'<t:{int(commit_time.astimezone(datetime.timezone.utc).timestamp())}:R>'
-  #  return f'[`{short_sha2}`](https://github.com/DeveloperJosh/MailHook/commit/{commit.hex}) {short} ({offset})'
+    offset = f'<t:{int(commit_time.astimezone(datetime.timezone.utc).timestamp())}:R>'
+    return f'[`{short_sha2}`](https://github.com/DeveloperJosh/MailHook/commit/{commit.hex}) {short} ({offset})'
 
 
-#def get_commits(count: int = 3):
-#    # CREDITS: https://github.com/Rapptz/RoboDanny
-##    repo = pygit2.Repository('.git')
- #   commits = list(itertools.islice(
-##        repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL), count))
-#    return '\n'.join(format_commit(commit) for commit in commits)
+def get_commits(count: int = 3):
+    # CREDITS: https://github.com/Rapptz/RoboDanny
+    repo = pygit2.Repository('.git')
+    commits = list(itertools.islice(repo.walk(repo.head.target, pygit2.GIT_SORT_TOPOLOGICAL), count))
+    return '\n'.join(format_commit(commit) for commit in commits)
 
 
 class Info(commands.Cog):
@@ -57,7 +56,7 @@ Other links:
     @commands.command(name="bot-info", help="Get some info about me!")
     @slash_command(name="bot-info", help="Get some info about me!")
     async def botinfo(self, ctx: Union[commands.Context, InteractionContext]):
-        await ctx.reply(embed=discord.Embed(
+        embed = discord.Embed(
             title="Info about me!",
             description="Modern modmail for modern Discord servers.",
             color=discord.Color.blurple(),
@@ -80,7 +79,16 @@ Other links:
             inline=True
         ).set_footer(text=self.bot.user.name, icon_url=self.bot.user.display_avatar.url
         ).set_author(name=self.bot.user.name, icon_url=self.bot.user.display_avatar.url
-        ).set_thumbnail(url=self.bot.user.display_avatar.url))
+        ).set_thumbnail(url=self.bot.user.display_avatar.url)
+        try:
+            embed.add_field(
+                name="Latest Commits:",
+                value=get_commits(),
+                inline=False
+            )
+        except Exception:
+            pass
+        await ctx.reply(embed=embed)
 
     @commands.command(name="credits", help="Credits to our contributors and helpers!")
     @slash_command(name="credits", help="Credits to our contributors and helpers!")
