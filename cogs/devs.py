@@ -102,6 +102,21 @@ Here are some useful links:
             except Exception:
                 pass
 
+    @commands.Cog.listener('on_guild_remove')
+    async def on_guild_remove(self, guild: discord.Guild):
+        log_embed = discord.Embed(
+            title="Guild left",
+            description=f"{guild.name} ({guild.id})",
+            color=discord.Color.red()
+        ).set_author(name=f"{guild.owner}", icon_url=guild.owner.display_avatar.url
+        ).add_field(name="Humans:", value=f"{len(list(filter(lambda m: not m.bot, guild.members)))}"
+        ).add_field(name="Bots:", value=f"{len(list(filter(lambda m: m.bot, guild.members)))}"
+        ).set_footer(text=f"Owner ID: {guild.owner_id}")
+        if guild.icon is not None:
+            log_embed.set_thumbnail(url=guild.icon.url)
+
+        await self.bot.get_channel(LOG_CHANNELS['add_remove']).send(embed=log_embed)
+
 
 def setup(bot: ModMail):
     bot.add_cog(Devs(bot))
