@@ -35,7 +35,8 @@
     LOG_CHANNELS = {
         'cmd_logs': channel id,
         'cmd_errors': channel id,
-        'event_errors': channel id
+        'event_errors': channel id,
+        'add_remove': channel id
     }
     ```
 
