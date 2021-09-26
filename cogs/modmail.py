@@ -275,6 +275,8 @@ All your messages will be send to the staff team.
             return
         if message.guild is None:
             return
+        if message.content.startswith('?'):
+            return
         if not message.channel.name.startswith("ticket-"):
             return
         ctx = await self.bot.get_context(message)
