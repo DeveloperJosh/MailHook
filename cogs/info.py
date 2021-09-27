@@ -57,7 +57,7 @@ Other links:
     @slash_command(name="bot-info", help="Get some info about me!")
     async def botinfo(self, ctx: Union[commands.Context, InteractionContext]):
         embed = discord.Embed(
-            title="Info about me!",
+            title=f"{self.bot.config.emojis.yes} Info about me!",
             description="Modern modmail for modern Discord servers.",
             color=discord.Color.blurple(),
             timestamp=datetime.datetime.utcnow()

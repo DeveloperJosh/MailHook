@@ -26,19 +26,7 @@
     $ py -3 -m pip install -r requirements.txt
     ```
 
-3. Setup the `config.py` file:
-    ```py
-    STAFF_EMOJI='emoji'
-    PREFIXES=['<', '?']
-    STATUS='My Dms'
-    OWNERS = [your discord id]
-    LOG_CHANNELS = {
-        'cmd_logs': channel id,
-        'cmd_errors': channel id,
-        'event_errors': channel id,
-        'add_remove': channel id
-    }
-    ```
+3. Setup the `config.py` file.
 
 4. Setup the a `.env` file:
     ```
