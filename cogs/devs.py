@@ -2,7 +2,6 @@ import discord
 from handler import InteractionContext
 from typing import Union
 from utils.bot import ModMail
-from config import LOG_CHANNELS
 from discord.ext import commands
 
 
@@ -39,7 +38,7 @@ class Devs(commands.Cog):
     async def cmd_logs(self, ctx: Union[commands.Context, InteractionContext]):
         if not ctx.guild:
             return
-        channel = self.bot.get_channel(LOG_CHANNELS['cmd_logs'])
+        channel = self.bot.get_channel(self.bot.config.logs.cmds)
         await channel.send(embed=discord.Embed(
             title="Command used:",
             description=f"Command: `{ctx.command.name}`\nSlash?: {'True' if isinstance(ctx, InteractionContext) else 'False'}",
@@ -80,7 +79,7 @@ Here are some useful links:
         if guild.icon is not None:
             log_embed.set_thumbnail(url=guild.icon.url)
 
-        await self.bot.get_channel(LOG_CHANNELS['add_remove']).send(embed=log_embed)
+        await self.bot.get_channel(self.bot.config.logs.add_remove).send(embed=log_embed)
 
         for channel in guild.channels:
             if "general" in channel.name:
@@ -115,7 +114,7 @@ Here are some useful links:
         if guild.icon is not None:
             log_embed.set_thumbnail(url=guild.icon.url)
 
-        await self.bot.get_channel(LOG_CHANNELS['add_remove']).send(embed=log_embed)
+        await self.bot.get_channel(self.bot.config.logs.add_remove).send(embed=log_embed)
 
 
 def setup(bot: ModMail):

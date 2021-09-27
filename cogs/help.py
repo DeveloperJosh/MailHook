@@ -2,13 +2,12 @@ import discord
 from discord.ext import commands
 from handler import slash_command, InteractionContext
 from utils.bot import ModMail
-from config import PREFIXES
 from typing import Union
 
 
 async def get_bot_help(bot: ModMail) -> discord.Embed:
     embed = discord.Embed(
-        description=f"My prefixes for are: {', '.join(['`'+p+'`' for p in PREFIXES])}.",
+        description=f"My prefixes for are: {', '.join(['`'+p+'`' for p in bot.config.prefixes])}.",
         color=discord.Color.blurple()
     ).set_author(icon_url=bot.user.display_avatar.url, name="MailHook Help")
     for cog_name, cog in bot.cogs.items():

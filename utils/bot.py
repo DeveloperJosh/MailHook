@@ -3,7 +3,7 @@ import discord
 import logging
 from dotenv import load_dotenv
 from discord.ext import commands
-from config import PREFIXES, STATUS, Emojis
+from config import Config
 from utils.database import Database
 from handler import InteractionClient
 
@@ -12,18 +12,18 @@ class ModMail(commands.AutoShardedBot):
     def __init__(self):
         logging.basicConfig(level=logging.INFO)
         load_dotenv('.env')
+        self.config = Config()
         super().__init__(
-            command_prefix=commands.when_mentioned_or(*PREFIXES),
+            command_prefix=commands.when_mentioned_or(*self.config.prefixes),
             intents=discord.Intents.all(),
             case_insensitive=True,
             allowed_mentions=discord.AllowedMentions.none(),
             strip_after_prefix=True,
-            activity=discord.Activity(type=discord.ActivityType.watching, name=STATUS),
+            activity=discord.Activity(type=discord.ActivityType.watching, name=self.config.status),
             help_command=None
         )
         self.app_client = InteractionClient(self)
         self.mongo = Database(os.getenv('DATABASE_LINK'))
-        self.emojis_ = Emojis()
         self.load_extension("jishaku")
         self.load_cogs("./cogs")
         self.add_check(self.blacklist_check)
