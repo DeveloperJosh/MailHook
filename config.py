@@ -1,4 +1,3 @@
-STAFF_EMOJI = '<:staff:884477446018199552>'
 PREFIXES = ['<', '?']
 STATUS = 'my dms'
 
@@ -9,3 +8,8 @@ LOG_CHANNELS = {
     'event_errors': 888368018915209236,
     'add_remove': 889116736077570068
 }
+
+
+class Emojis:
+    def __init__(self):
+        self.staff = '<:staff:884477446018199552>'

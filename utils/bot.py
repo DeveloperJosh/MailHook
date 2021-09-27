@@ -3,7 +3,7 @@ import discord
 import logging
 from dotenv import load_dotenv
 from discord.ext import commands
-from config import PREFIXES, STATUS
+from config import PREFIXES, STATUS, Emojis
 from utils.database import Database
 from handler import InteractionClient
 
@@ -23,6 +23,7 @@ class ModMail(commands.AutoShardedBot):
         )
         self.app_client = InteractionClient(self)
         self.mongo = Database(os.getenv('DATABASE_LINK'))
+        self.emojis_ = Emojis()
         self.load_extension("jishaku")
         self.load_cogs("./cogs")
         self.add_check(self.blacklist_check)
