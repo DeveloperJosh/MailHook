@@ -1,3 +1,9 @@
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+
+
 class Emojis:
     def __init__(self):
         self.staff = '<:staff:884477446018199552>'
@@ -21,3 +27,4 @@ class Config:
         self.prefixes = ['<', '?']
         self.status = 'my dms'
         self.owners = [321750582912221184, 558861606063308822]
+        self.client_secret = os.environ.get('CLIENT_SECRET')

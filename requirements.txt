@@ -7,3 +7,6 @@ asyncio
 dnspython
 humanfriendly
 pygit2
+hikari
+uvloop
+aiohttp_cors
