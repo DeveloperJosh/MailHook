@@ -44,12 +44,13 @@ class WebServer(commands.Cog):
         self.api = None
         self.BASE = "https://discord.com/api"
         # self.REDIRECT_URI = "https://mailhook-beta.netlify.app/callback"
-        self.REDIRECT_URI = "http://localhost:8000/callback"
+        self.REDIRECT_URI = "http://localhost:3000/callback"
         self.cors_thing = {
             "*": aiohttp_cors.ResourceOptions(
                 allow_credentials=True,
                 expose_headers="*",
                 allow_headers="*",
+                allow_methods="*"
             )
         }
 
@@ -89,11 +90,11 @@ class WebServer(commands.Cog):
                 return [Guild(**g) for g in data]
 
     async def callback(self, request: web.Request):
-        code = (await request.json()).get("code")
+        code = (await request.json()).get("code").get("code")
         if code is None:
             raise web.HTTPBadRequest()
         data = await self.get_access_token(code)
-        return {"access_token": data.get("access_token")}
+        return web.json_response({"access_token": data.get("access_token")})
 
     async def get_own_user(self, request: web.Request):
         access_token = request.headers.get("access_token")
