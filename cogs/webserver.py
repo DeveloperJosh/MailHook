@@ -1,6 +1,5 @@
 import logging
 import asyncio
-import os
 import discord
 import hikari
 import aiohttp_cors
@@ -19,7 +18,7 @@ except Exception:
 
 class Guild:
     def __init__(self, id: str, name: str, icon: str, owner: bool, permissions: int, features: List[str], permissions_new: str):
-        self.id: int = int(id)
+        self.id: str = id
         self.name: str = name
         self.icon: str = icon
         self.owner: bool = owner
@@ -59,7 +58,7 @@ class WebServer(commands.Cog):
         mutual_guilds: List[Guild] = []
         bot_guild_ids = [g.id for g in bot_guilds]
         for guild in user_guilds:
-            if guild.id in bot_guild_ids:
+            if int(guild.id) in bot_guild_ids:
                 mutual_guilds.append(guild)
         return [g for g in mutual_guilds if g.permissions & hikari.Permissions.MANAGE_GUILD]
 
@@ -126,6 +125,59 @@ class WebServer(commands.Cog):
             } for g in valid_guilds]
         })
 
+    async def get_guild_data(self, request: web.Request):
+        guild_id = request.headers.get("guild_id")
+        if guild_id is None:
+            raise web.HTTPBadRequest()
+        try:
+            int(guild_id)
+        except ValueError:
+            return web.json_response({"error": "Invalid guild id"})
+        guild = self.client.get_guild(int(guild_id))
+        if guild is None:
+            return web.json_response({"error": "Guild not found"})
+        guild_data = await self.client.mongo.get_guild_data(guild.id, raise_error=False)
+        if guild_data is not None:
+            modrole = guild.get_role(guild_data['staff_role'])
+            ticket_category = guild.get_channel(guild_data['category'])
+            transcripts_channel = guild.get_channel(guild_data['transcripts'])
+            current_tickets = await self.client.mongo.get_guild_modmail_threads(guild.id)
+
+        return web.json_response({
+            "id": str(guild.id),
+            "name": guild.name,
+            "description": guild.description,
+            "icon": guild.icon.url if guild.icon is not None else "https://cdn.discordapp.com/embed/avatars/0.png",
+            "banner": guild.banner.url if guild.banner is not None else None,
+            "members": guild.member_count,
+            "owner": {
+                "id": guild.owner.id,
+                "username": guild.owner.name,
+                "discriminator": guild.owner.discriminator,
+                "avatar": guild.owner.display_avatar.url
+            } if guild.owner is not None else None,
+            "settings": {
+                "prefixes": self.client.config.prefixes,
+                "modRole": {
+                    "id": modrole.id,
+                    "name": modrole.name,
+                    "color": str(modrole.color),
+                } if modrole is not None else None,
+                "ticketCategory": {
+                    "id": ticket_category.id,
+                    "name": ticket_category.name,
+                } if ticket_category is not None else None,
+                "transcriptsChannel": {
+                    "id": transcripts_channel.id,
+                    "name": transcripts_channel.name,
+                } if transcripts_channel is not None else None,
+                "currentTickets": [{
+                    "userId": ticket['_id'],
+                    "channelId": ticket['channel_id']
+                } for ticket in current_tickets]
+            } if guild_data is not None else None,
+        })
+
     async def bot_stats(self, request: web.Request):
         return web.json_response({
             "guilds": len(self.client.guilds),
@@ -140,21 +192,19 @@ class WebServer(commands.Cog):
         callback_resource = cors.add(app.router.add_resource("/oauth/callback"))
         get_own_user_resource = cors.add(app.router.add_resource("/users/me"))
         get_guilds_resource = cors.add(app.router.add_resource("/guilds"))
+        get_guild_data_resource = cors.add(app.router.add_resource("/guild"))
         bot_stats_resource = cors.add(app.router.add_resource("/stats"))
 
         cors.add(callback_resource.add_route("POST", self.callback), self.cors_thing)
         cors.add(get_own_user_resource.add_route("GET", self.get_own_user), self.cors_thing)
         cors.add(get_guilds_resource.add_route("GET", self.get_guilds), self.cors_thing)
+        cors.add(get_guild_data_resource.add_route("GET", self.get_guild_data), self.cors_thing)
         cors.add(bot_stats_resource.add_route("GET", self.bot_stats), self.cors_thing)
-
-        # app.router.add_route("POST", "/oauth/callback", self.callback)
-        # app.router.add_route("GET", "/users/me", self.get_own_user)
-        # app.router.add_route("GET", "/guilds", self.get_guilds)
 
         runner = web.AppRunner(app)
         await runner.setup()
 
-        self.api = web.TCPSite(runner, port=os.environ.get("PORT", 3000))
+        self.api = web.TCPSite(runner, host="localhost", port=8080)
         await self.client.wait_until_ready()
         await self.api.start()
         logging.info(f"Web server started at PORT: {self.api._port} HOST: {self.api._host}")
