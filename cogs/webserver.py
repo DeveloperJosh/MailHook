@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import os
 import discord
 import hikari
 import aiohttp_cors
@@ -153,10 +154,10 @@ class WebServer(commands.Cog):
         runner = web.AppRunner(app)
         await runner.setup()
 
-        self.api = web.TCPSite(runner, "0.0.0.0", 8000)
+        self.api = web.TCPSite(runner, port=os.environ.get("PORT", 3000))
         await self.client.wait_until_ready()
         await self.api.start()
-        logging.info("Web server started")
+        logging.info(f"Web server started at PORT: {self.api._port} HOST: {self.api._host}")
 
     def cog_unload(self) -> None:
         asyncio.ensure_future(self.api.stop())
@@ -165,5 +166,5 @@ class WebServer(commands.Cog):
 
 def setup(client: ModMail):
     cog = WebServer(client)
-    client.add_check(cog)
+    client.add_cog(cog)
     client.loop.create_task(cog.start_server())
