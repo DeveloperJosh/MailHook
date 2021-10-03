@@ -1,5 +1,6 @@
 import logging
 import asyncio
+import os
 import discord
 import hikari
 import aiohttp_cors
@@ -204,7 +205,7 @@ class WebServer(commands.Cog):
         runner = web.AppRunner(app)
         await runner.setup()
 
-        self.api = web.TCPSite(runner, host="localhost", port=8080)
+        self.api = web.TCPSite(runner, host="0.0.0.0", port=os.environ.get("PORT", 8080))
         await self.client.wait_until_ready()
         await self.api.start()
         logging.info(f"Web server started at PORT: {self.api._port} HOST: {self.api._host}")
