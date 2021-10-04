@@ -25,7 +25,7 @@ body:
   validations:
     required: true
 - type: textarea
-  id: name of the command the bug happend in
+  id: name-of-the-command-the-bug-happend-in
   attributes:
     label: What is the name of the command the bug/error happend in?
     placeholder: Tell us what you see!
@@ -33,21 +33,21 @@ body:
   validations:
     required: true
 - type: textarea
-  id: Steps to bug
+  id: Steps-to-bug
   attributes:
     label: Steps to bug
     value: "..."
   validations:
     required: true
-- type: textara
-  id: Expected behavior
+- type: textarea
+  id: Expected-Behavior
   attributes:
     label: Expected behavior
     placeholder: A clear and concise description of what you expected to happen.
     value: "..."
   validations:
     required: false
-- type: textara
+- type: textarea
   id: ScreenShots
   attributes:
     label: Screenshots
@@ -58,7 +58,7 @@ body:
 - type: textarea
   id: Additional Context
   attributes:
-    label: Additional Context
+    label: Additional-Context
     placeholder: Add any other context about the problem here.
     value: "..."
   validations:
