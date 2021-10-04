@@ -24,7 +24,7 @@ body:
     value: "A bug happened!"
   validations:
     required: true
-- type: textarea
+- type: input
   id: name-of-the-command-the-bug-happend-in
   attributes:
     label: What is the name of the command the bug/error happend in?
@@ -36,6 +36,13 @@ body:
   id: Steps-to-bug
   attributes:
     label: Steps to bug
+    value: "..."
+  validations:
+    required: true
+- type: textarea
+  id: See-Error
+  attributes:
+    label: See-Error
     value: "..."
   validations:
     required: true
