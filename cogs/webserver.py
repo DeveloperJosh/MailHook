@@ -43,7 +43,7 @@ class WebServer(commands.Cog):
         self.rest_api = hikari.RESTApp()
         self.api = None
         self.BASE = "https://discord.com/api"
-        self.REDIRECT_URI = "https://mailhook-beta.netlify.app/callback"
+        self.REDIRECT_URI = "https://mail-hook.site/callback"
         # self.REDIRECT_URI = "http://localhost:3000/callback"
         self.cors_thing = {
             "*": aiohttp_cors.ResourceOptions(
