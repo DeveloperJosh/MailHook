@@ -56,9 +56,9 @@ body:
   validations:
     required: false
 - type: textarea
-  id: Additional Context
+  id: Additional-Context
   attributes:
-    label: Additional-Context
+    label: Additional Context
     placeholder: Add any other context about the problem here.
     value: "..."
   validations:
