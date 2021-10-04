@@ -158,6 +158,22 @@ class WebServer(commands.Cog):
         self.client.dispatch("category_update", guild, category)
         return web.json_response({"success": True})
 
+    async def update_transcript_channel(self, request: web.Request):
+        susu = await request.json()
+        channel_id = susu.get("channel_id")
+        guild_id = susu.get("guild_id")
+        if channel_id is None or guild_id is None:
+            raise web.HTTPBadRequest()
+        guild = self.client.get_guild(int(guild_id))
+        if guild is None:
+            return web.json_response({"error": "Guild not found"})
+        channel = guild.get_channel(int(channel_id))
+        if channel is None:
+            return web.json_response({"error": "Channel not found"})
+        await self.client.mongo.set_guild_data(guild_id=int(guild_id), transcripts=channel.id)
+        self.client.dispatch("transcript_channel_update", guild, channel)
+        return web.json_response({"success": True})
+
     async def get_guild_data(self, request: web.Request):
         guild_id = request.headers.get("guild_id")
         user_id = request.headers.get("user_id")
@@ -252,6 +268,7 @@ class WebServer(commands.Cog):
         bot_stats_resource = cors.add(app.router.add_resource("/stats"))
         update_mod_role_resource = cors.add(app.router.add_resource("/update_mod_role"))
         update_category_resource = cors.add(app.router.add_resource("/update_category"))
+        update_transcripts_resource = cors.add(app.router.add_resource("/update_transcripts"))
 
         cors.add(callback_resource.add_route("POST", self.callback), self.cors_thing)
         cors.add(get_own_user_resource.add_route("GET", self.get_own_user), self.cors_thing)
@@ -260,6 +277,7 @@ class WebServer(commands.Cog):
         cors.add(bot_stats_resource.add_route("GET", self.bot_stats), self.cors_thing)
         cors.add(update_mod_role_resource.add_route("POST", self.update_mod_role), self.cors_thing)
         cors.add(update_category_resource.add_route("POST", self.update_category), self.cors_thing)
+        cors.add(update_transcripts_resource.add_route("POST", self.update_transcripts), self.cors_thing)
 
         runner = web.AppRunner(app)
         await runner.setup()
