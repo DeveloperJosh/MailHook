@@ -1,9 +1,32 @@
-name: 🐛 Bug Report
-
+name: Bug Report
+description: Report broken or incorrect behaviour
+labels: unconfirmed bug
 body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to fill out a bug-report.
+        Please note that this form is for bugs only!
   - type: input
-  attributes:
-   label: Command?
-   description: "What command did the bug happen in?"
-  validations:
+    attributes:
+      label: Command
+      description: The command that the error happend in.
+    validations:
       required: true
+  - type: input
+   attributes:
+    label: Steps to bug
+   validations:
+      required: true
+  - type: input
+   attributes:
+    label: Expected behavior
+    description: A clear and concise description of what you expected to happen.
+  - type: input
+    attributes:
+     label: ScreenShots
+     description: If applicable, add screenshots to help explain your problem. 
+  - type: input
+    attributes:
+      label: Additional context
+      description: Add any other context about the problem here.
