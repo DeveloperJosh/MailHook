@@ -4,7 +4,7 @@ labels: unconfirmed bug
 body:
   type: markdown
     attributes:
-      value: |
+      value: >
         Thanks for taking the time to fill out a bug-report.
         Please note that this form is for bugs only!
   - type: input
