@@ -2,7 +2,7 @@ name: Bug Report
 description: Report broken or incorrect behaviour
 labels: unconfirmed bug
 body:
-  - type: markdown
+  type: markdown
     attributes:
       value: |
         Thanks for taking the time to fill out a bug-report.
