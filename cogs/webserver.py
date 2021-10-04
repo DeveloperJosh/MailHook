@@ -277,7 +277,7 @@ class WebServer(commands.Cog):
         cors.add(bot_stats_resource.add_route("GET", self.bot_stats), self.cors_thing)
         cors.add(update_mod_role_resource.add_route("POST", self.update_mod_role), self.cors_thing)
         cors.add(update_category_resource.add_route("POST", self.update_category), self.cors_thing)
-        cors.add(update_transcripts_resource.add_route("POST", self.update_transcripts), self.cors_thing)
+        cors.add(update_transcripts_resource.add_route("POST", self.update_transcript_channel), self.cors_thing)
 
         runner = web.AppRunner(app)
         await runner.setup()
