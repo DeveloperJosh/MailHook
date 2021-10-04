@@ -1,9 +1,6 @@
 name: 🐛 Bug Report
 
 body:
-  - type: markdown
-  attributes:
-   value: Thanks for taking the time to file a bug report!
   - type: input
   attributes:
    label: Command?
