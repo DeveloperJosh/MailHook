@@ -35,7 +35,7 @@ class Guild:
 
     @property
     def icon_url(self) -> str:
-        return f"https://cdn.discordapp.com/icons/{self.id}/{self.icon}.png"
+        return f"https://cdn.discordapp.com/icons/{self.id}/{self.icon}.png" if self.icon is not None else None
 
 
 class WebServer(commands.Cog):
@@ -95,6 +95,7 @@ class WebServer(commands.Cog):
         if code is None:
             raise web.HTTPBadRequest()
         data = await self.get_access_token(code)
+        print(data)
         return web.json_response({"access_token": data.get("access_token")})
 
     async def get_own_user(self, request: web.Request):
@@ -103,7 +104,7 @@ class WebServer(commands.Cog):
             raise web.HTTPBadRequest()
         user = await self.get_user(access_token)
         return web.json_response({
-            "id": user.id,
+            "id": str(user.id),
             "username": user.username,
             "discriminator": user.discriminator,
             "avatar": str(user.avatar_url)
@@ -126,17 +127,57 @@ class WebServer(commands.Cog):
             } for g in valid_guilds]
         })
 
-    async def get_guild_data(self, request: web.Request):
-        guild_id = request.headers.get("guild_id")
-        if guild_id is None:
+    async def update_mod_role(self, request: web.Request):
+        susu = await request.json()
+        role_id = susu.get("role_id")
+        guild_id = susu.get("guild_id")
+        if role_id is None or guild_id is None:
             raise web.HTTPBadRequest()
-        try:
-            int(guild_id)
-        except ValueError:
-            return web.json_response({"error": "Invalid guild id"})
         guild = self.client.get_guild(int(guild_id))
         if guild is None:
             return web.json_response({"error": "Guild not found"})
+        role = guild.get_role(int(role_id))
+        if role is None:
+            return web.json_response({"error": "Role not found"})
+        await self.client.mongo.set_guild_data(guild_id=int(guild_id), staff_role=role.id)
+        self.client.dispatch("mod_role_update", guild, role)
+        return web.json_response({"success": True})
+
+    async def update_category(self, request: web.Request):
+        susu = await request.json()
+        category_id = susu.get("category_id")
+        guild_id = susu.get("guild_id")
+        if category_id is None or guild_id is None:
+            raise web.HTTPBadRequest()
+        guild = self.client.get_guild(int(guild_id))
+        if guild is None:
+            return web.json_response({"error": "Guild not found"})
+        category = guild.get_channel(int(category_id))
+        if category is None:
+            return web.json_response({"error": "Category not found"})
+        await self.client.mongo.set_guild_data(guild_id=int(guild_id), category=category.id)
+        self.client.dispatch("category_update", guild, category)
+        return web.json_response({"success": True})
+
+    async def get_guild_data(self, request: web.Request):
+        guild_id = request.headers.get("guild_id")
+        user_id = request.headers.get("user_id")
+        print(user_id, guild_id)
+        if guild_id is None or user_id is None:
+            raise web.HTTPBadRequest()
+        try:
+            int(guild_id)
+            int(user_id)
+        except ValueError:
+            return web.json_response({"error": "Invalid guild id or user id"})
+        guild = self.client.get_guild(int(guild_id))
+        if guild is None:
+            return web.json_response({"error": "Guild not found"})
+        member = guild.get_member(int(user_id))
+        if member is None:
+            return web.json_response({"error": "Member not found"})
+        if not member.guild_permissions.manage_guild:
+            return web.json_response({"error": "Insufficient permissions"})
         guild_data = await self.client.mongo.get_guild_data(guild.id, raise_error=False)
         if guild_data is not None:
             modrole = guild.get_role(guild_data['staff_role'])
@@ -151,6 +192,21 @@ class WebServer(commands.Cog):
             "icon": guild.icon.url if guild.icon is not None else "https://cdn.discordapp.com/embed/avatars/0.png",
             "banner": guild.banner.url if guild.banner is not None else None,
             "members": guild.member_count,
+            "roles": len(guild.roles),
+            "channels": len(guild.channels),
+            "roleList": [{
+                "id": str(r.id),
+                "name": r.name,
+                "color": str(r.color),
+            } for r in guild.roles if r != guild.default_role][::-1],
+            "categoryList": [{
+                "id": str(c.id),
+                "name": c.name
+            } for c in guild.categories],
+            "channelList": [{
+                "id": str(c.id),
+                "name": c.name
+            } for c in guild.text_channels],
             "owner": {
                 "id": guild.owner.id,
                 "username": guild.owner.name,
@@ -195,17 +251,21 @@ class WebServer(commands.Cog):
         get_guilds_resource = cors.add(app.router.add_resource("/guilds"))
         get_guild_data_resource = cors.add(app.router.add_resource("/guild"))
         bot_stats_resource = cors.add(app.router.add_resource("/stats"))
+        update_mod_role_resource = cors.add(app.router.add_resource("/update_mod_role"))
+        update_category_resource = cors.add(app.router.add_resource("/update_category"))
 
         cors.add(callback_resource.add_route("POST", self.callback), self.cors_thing)
         cors.add(get_own_user_resource.add_route("GET", self.get_own_user), self.cors_thing)
         cors.add(get_guilds_resource.add_route("GET", self.get_guilds), self.cors_thing)
         cors.add(get_guild_data_resource.add_route("GET", self.get_guild_data), self.cors_thing)
         cors.add(bot_stats_resource.add_route("GET", self.bot_stats), self.cors_thing)
+        cors.add(update_mod_role_resource.add_route("POST", self.update_mod_role), self.cors_thing)
+        cors.add(update_category_resource.add_route("POST", self.update_category), self.cors_thing)
 
         runner = web.AppRunner(app)
         await runner.setup()
 
-        self.api = web.TCPSite(runner, host="0.0.0.0", port=os.environ.get("PORT", 8080))
+        self.api = web.TCPSite(runner, host="0.0.0.0", port=os.environ.get("PORT", 8153))
         await self.client.wait_until_ready()
         await self.api.start()
         logging.info(f"Web server started at PORT: {self.api._port} HOST: {self.api._host}")
