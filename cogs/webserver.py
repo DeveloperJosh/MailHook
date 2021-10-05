@@ -257,6 +257,11 @@ class WebServer(commands.Cog):
             "ping": round(self.client.latency * 1000, 2),
         })
 
+    async def get_ticket_html(self, request: web.Request):
+        return web.json_response({
+            "html": "susu"
+        })
+
     async def start_server(self):
         app = web.Application()
         cors = aiohttp_cors.setup(app)
@@ -269,6 +274,7 @@ class WebServer(commands.Cog):
         update_mod_role_resource = cors.add(app.router.add_resource("/update_mod_role"))
         update_category_resource = cors.add(app.router.add_resource("/update_category"))
         update_transcripts_resource = cors.add(app.router.add_resource("/update_transcripts"))
+        get_ticket_html_resource = cors.add(app.router.add_resource("/get_ticket_html"))
 
         cors.add(callback_resource.add_route("POST", self.callback), self.cors_thing)
         cors.add(get_own_user_resource.add_route("GET", self.get_own_user), self.cors_thing)
@@ -278,6 +284,7 @@ class WebServer(commands.Cog):
         cors.add(update_mod_role_resource.add_route("POST", self.update_mod_role), self.cors_thing)
         cors.add(update_category_resource.add_route("POST", self.update_category), self.cors_thing)
         cors.add(update_transcripts_resource.add_route("POST", self.update_transcript_channel), self.cors_thing)
+        cors.add(get_ticket_html_resource.add_route("GET", self.get_ticket_html), self.cors_thing)
 
         runner = web.AppRunner(app)
         await runner.setup()
