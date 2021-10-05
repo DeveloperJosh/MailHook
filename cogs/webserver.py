@@ -270,6 +270,12 @@ class WebServer(commands.Cog):
         guild_id = things_of_url[2]
         channel_id = things_of_url[3]
         message_id = things_of_url[4]
+        try:
+            int(guild_id)
+            int(channel_id)
+            int(message_id)
+        except ValueError:
+            return web.json_response({"error": "bruh moment, enter some integers o_o"})
         guild = self.client.get_guild(int(guild_id))
         if guild is None:
             return web.json_response({"error": "Message URL contains invalid guild ID"})
