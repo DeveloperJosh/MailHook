@@ -257,9 +257,110 @@ class WebServer(commands.Cog):
             "ping": round(self.client.latency * 1000, 2),
         })
 
+    async def get_ticket_url(self, request: web.Request):
+        message_url = request.headers.get("message_url")
+        user_id = request.headers.get("user_id")
+        if user_id is None:
+            raise web.HTTPBadRequest()
+        if message_url is None:
+            return web.json_response({"error": "No message url provided"})
+        things_of_url = message_url.replace("https://", "").replace("http://", "").split("/", 4)
+        if len(things_of_url) != 5:
+            return web.json_response({"error": "Invalid message url"})
+        guild_id = things_of_url[2]
+        channel_id = things_of_url[3]
+        message_id = things_of_url[4]
+        guild = self.client.get_guild(int(guild_id))
+        if guild is None:
+            return web.json_response({"error": "Message URL contains invalid guild ID"})
+        member = guild.get_member(int(user_id))
+        if member is None:
+            return web.json_response({"error": "You do not have access to view this ticket."})
+        channel = guild.get_channel(int(channel_id))
+        if channel is None:
+            return web.json_response({"error": "Message URL contains invalid channel ID"})
+        try:
+            message = await channel.fetch_message(int(message_id))
+            if message.author.id != self.client.user.id:
+                return web.json_response({"error": "Invalid message URL"})
+            if len(message.attachments) != 1:
+                return web.json_response({"error": "Invalid message URL"})
+            attachment = message.attachments[0]
+            if not attachment.filename.endswith(".txt"):
+                return web.json_response({"error": "Invalid message URL"})
+        except discord.NotFound:
+            return web.json_response({"error": "Invalid message URL"})
+        return web.json_response({"url": f"/tickets/{guild_id}/{channel_id}/{message_id}"})
+
     async def get_ticket_html(self, request: web.Request):
+        final = ""
+        guild_id = request.headers.get("guild_id")
+        user_id = request.headers.get("user_id")
+        channel_id = request.headers.get("channel_id")
+        msg_id = request.headers.get("msg_id")
+        h1_classes = "'text-white font-bold text-center text-3xl'"
+        default_avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
+        if guild_id is None or user_id is None or channel_id is None or msg_id is None:
+            final = f"<h1 class={h1_classes}> Missing guild_id or user_id or channel_id or msg_id in the URL </h1>"
+        else:
+            try:
+                int(guild_id)
+                int(user_id)
+                int(channel_id)
+                int(msg_id)
+            except ValueError:
+                final = f"<h1 class={h1_classes}> bruh moment, the ids need to be integers ._. </h1>"
+                return web.json_response({
+                    "html": final
+                })
+            guild = self.client.get_guild(int(guild_id))
+            if guild is None:
+                final = f"<h1 class={h1_classes}> Guild not found </h1>"
+            else:
+                member = guild.get_member(int(user_id))
+                if member is None:
+                    final = f"<h1 class={h1_classes}> You are not the guild, hence you cannot access this guild's tickets. </h1>"
+                else:
+                    channel = guild.get_channel(int(channel_id))
+                    if channel is None:
+                        final = f"<h1 class={h1_classes}> Invalid channel ID </h1>"
+                    else:
+                        try:
+                            message = await channel.fetch_message(int(msg_id))
+                            if message.author.id != self.client.user.id:
+                                final = f"<h1 class={h1_classes} > Invalid ticket ID </h1>"
+                            else:
+                                if len(message.attachments) != 1:
+                                    final = f"<h1 class={h1_classes}> Invalid ticket ID </h1>"
+                                else:
+                                    attachment = message.attachments[0]
+                                    if not attachment.filename.endswith(".txt"):
+                                        final = f"<h1 class={h1_classes}> Invalid ticket ID </h1>"
+                                    else:
+                                        bytes_data = await attachment.read()
+                                        text_data = bytes_data.decode()
+                                        ticket_user_id = int(message.content)
+                                        ticket_member = self.client.get_user(ticket_user_id)
+                                        for text_line in text_data.split("\n\n"):
+                                            lines = text_line.split(" | ", 3)
+                                            if len(lines) >= 3:
+                                                user_name = lines[0]
+                                                actual_message_content = lines[3]
+                                                member_id = lines[1]
+                                                member = ticket_member if member_id == str(ticket_user_id) else guild.get_member(int(member_id))
+                                                final += f"""
+                                                    <div class='discord-message flex'>
+                                                        <img class="rounded-full" height="50px" width="50px" src={member.display_avatar.url if member is not None else (default_avatar if len(user_name.split("#")) == 3 else (ticket_member.display_avatar.url if ticket_member is not None else default_avatar))} />
+                                                        <div class="author-and-message flex flex-col justify-center h-full">
+                                                            <h1 class="font-bold text-white text-xl">{member or user_name}</h1>
+                                                            <p class="text-white">{actual_message_content}</p>
+                                                        </div>
+                                                    </div>
+                                                """
+                        except discord.NotFound:
+                            final = f"<h1 class={h1_classes}> Invalid message ID </h1>"
         return web.json_response({
-            "html": "susu"
+            "html": final
         })
 
     async def start_server(self):
@@ -275,6 +376,7 @@ class WebServer(commands.Cog):
         update_category_resource = cors.add(app.router.add_resource("/update_category"))
         update_transcripts_resource = cors.add(app.router.add_resource("/update_transcripts"))
         get_ticket_html_resource = cors.add(app.router.add_resource("/get_ticket_html"))
+        get_ticket_url_resource = cors.add(app.router.add_resource("/get_ticket_url"))
 
         cors.add(callback_resource.add_route("POST", self.callback), self.cors_thing)
         cors.add(get_own_user_resource.add_route("GET", self.get_own_user), self.cors_thing)
@@ -285,6 +387,7 @@ class WebServer(commands.Cog):
         cors.add(update_category_resource.add_route("POST", self.update_category), self.cors_thing)
         cors.add(update_transcripts_resource.add_route("POST", self.update_transcript_channel), self.cors_thing)
         cors.add(get_ticket_html_resource.add_route("GET", self.get_ticket_html), self.cors_thing)
+        cors.add(get_ticket_url_resource.add_route("GET", self.get_ticket_url), self.cors_thing)
 
         runner = web.AppRunner(app)
         await runner.setup()
