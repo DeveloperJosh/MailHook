@@ -1,0 +1,72 @@
+name: Bug Report
+description: File a bug report
+title: "[Bug]: "
+labels: [bug]
+body:
+- type: markdown
+  attributes:
+    value: |
+      Thanks for taking the time to fill out this bug report!
+- type: input
+  id: contact
+  attributes:
+    label: Contact Details
+    description: How can we get in touch with you if we need more info?
+    placeholder: ex. email@example.com
+  validations:
+    required: false
+- type: textarea
+  id: what-happened
+  attributes:
+    label: What happened?
+    description: Also tell us, what did you expect to happen?
+    placeholder: Tell us what you see!
+    value: "A bug happened!"
+  validations:
+    required: true
+- type: input
+  id: name-of-the-command-the-bug-happend-in
+  attributes:
+    label: What is the name of the command the bug/error happend in?
+    placeholder: Tell us what you see!
+    value: "..."
+  validations:
+    required: true
+- type: textarea
+  id: Steps-to-bug
+  attributes:
+    label: Steps to bug
+    value: "..."
+  validations:
+    required: true
+- type: textarea
+  id: See-Error
+  attributes:
+    label: See-Error
+    value: "..."
+  validations:
+    required: true
+- type: textarea
+  id: Expected-Behavior
+  attributes:
+    label: Expected behavior
+    placeholder: A clear and concise description of what you expected to happen.
+    value: "..."
+  validations:
+    required: false
+- type: textarea
+  id: ScreenShots
+  attributes:
+    label: Screenshots
+    placeholder: If applicable, add screenshots to help explain your problem.
+    value: "..."
+  validations:
+    required: false
+- type: textarea
+  id: Additional-Context
+  attributes:
+    label: Additional Context
+    placeholder: Add any other context about the problem here.
+    value: "..."
+  validations:
+    required: false
