@@ -25,6 +25,7 @@ class Guild:
         self.permissions: int = permissions
         self.features: List[str] = features
         self.permissions_new: str = permissions_new
+        self.invited: bool = False
 
     def __str__(self) -> str:
         return f"<Guild name='{self.name}' id={self.id}>"
@@ -59,7 +60,10 @@ class WebServer(commands.Cog):
         bot_guild_ids = [g.id for g in bot_guilds]
         for guild in user_guilds:
             if int(guild.id) in bot_guild_ids:
-                mutual_guilds.append(guild)
+                guild.invited = True
+            else:
+                guild.invited = False
+            mutual_guilds.append(guild)
         return [g for g in mutual_guilds if g.permissions & hikari.Permissions.MANAGE_GUILD]
 
     async def get_access_token(self, code: str) -> dict:
@@ -116,14 +120,15 @@ class WebServer(commands.Cog):
 
         user_guilds = await self.get_user_guilds(access_token)
         bot_guilds = self.client.guilds
-        valid_guilds = self.filter_guilds(user_guilds, bot_guilds)
+        final_guilds = self.filter_guilds(user_guilds, bot_guilds)
 
         return web.json_response({
             "guilds": [{
                 "id": g.id,
                 "name": g.name,
                 "icon_url": g.icon_url,
-            } for g in valid_guilds]
+                "invited": g.invited
+            } for g in final_guilds]
         })
 
     async def update_mod_role(self, request: web.Request):
