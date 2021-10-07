@@ -228,7 +228,7 @@ class WebServer(commands.Cog):
                 "name": c.name
             } for c in guild.text_channels],
             "owner": {
-                "id": guild.owner.id,
+                "id": str(guild.owner.id),
                 "username": guild.owner.name,
                 "discriminator": guild.owner.discriminator,
                 "avatar": guild.owner.display_avatar.url
@@ -236,21 +236,21 @@ class WebServer(commands.Cog):
             "settings": {
                 "prefixes": self.client.config.prefixes,
                 "modRole": {
-                    "id": modrole.id,
+                    "id": str(modrole.id),
                     "name": modrole.name,
                     "color": str(modrole.color),
                 } if modrole is not None else None,
                 "ticketCategory": {
-                    "id": ticket_category.id,
+                    "id": str(ticket_category.id),
                     "name": ticket_category.name,
                 } if ticket_category is not None else None,
                 "transcriptsChannel": {
-                    "id": transcripts_channel.id,
+                    "id": str(transcripts_channel.id),
                     "name": transcripts_channel.name,
                 } if transcripts_channel is not None else None,
                 "currentTickets": [{
-                    "userId": ticket['_id'],
-                    "channelId": ticket['channel_id']
+                    "userId": str(ticket['_id']),
+                    "channelId": str(ticket['channel_id'])
                 } for ticket in current_tickets]
             } if guild_data is not None else None,
         })
