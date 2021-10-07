@@ -98,7 +98,7 @@ Other links:
             description="""
 **Owner:** [`Blue.#1270`](https://discord.com/users/321750582912221184)
 **Developer:** [`Nirlep_5252_#9798`](https://discord.com/users/558861606063308822)
-**Contributor(s):** [`OSX#0110`](https://discord.com/users/529995365714231327), [`SylmFox#2643`](https://discord.com/users/739440618107043901)
+**Contributor(s):** [`OSX#0110`](https://discord.com/users/529995365714231327)
 
 **Github:** https://github.com/DeveloperJosh/MailHook
             """,
