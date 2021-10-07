@@ -69,7 +69,7 @@ async def prepare_transcript(bot: ModMail, channel_id: int, guild_id: int, guild
     for msg in all_msgs[::-1]:
         content = msg.content.replace("\n\n", "\n‎\n")
         # TODO: attachments and stickers
-        text += f"{msg.author} | {msg.author.id if not msg.author.bot else (channel.name[7:] if str(msg.author) != 'Anonymous Reply#0000' else msg.author.id)} | {msg.id} | {content}\n\n"
+        text += f"{msg.author} | {channel.name[7:] if len(str(msg.author).split('#')) == 3 else msg.author.id} | {msg.id} | {content}\n\n"
     file = discord.File(BytesIO(text.encode("utf-8")), filename=f"{channel.name}.txt")
     msg = await transcript_channel.send(content=channel.name[7:], file=file)
     await transcript_channel.send(f"You can view this ticket at https://mail-hook.site/tickets/{msg.guild.id}/{msg.channel.id}/{msg.id}")
