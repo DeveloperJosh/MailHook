@@ -5,7 +5,9 @@
 
 ## 🎉 Features
 
+- Completely customizable from the dashboard.
 - Full slash commands and context menu commands support.
+- Multiprefix support (upto 10 prefixes).
 - Per guild configuration.
 - Fast response time.
 
@@ -77,5 +79,6 @@
 
 ## 🔗 Useful Links
 
+- [Dashboard](https://mail-hook.site)
 - [Support Server](https://discord.gg/TeSHENet9M)
 - [Invite Me](https://discord.com/oauth2/authorize?client_id=781639675868872796&permissions=8&scope=bot%20applications.commands)
