@@ -76,6 +76,9 @@ class ModMail(commands.AutoShardedBot):
             prefixes.extend(self.config.prefixes)
             return prefixes
         data = await self.mongo.get_guild_data(message.guild.id, raise_error=False)
+        if data is None:
+            prefixes.extend(self.config.prefixes)
+            return prefixes
         guild_prefixes = data.get('prefixes', self.config.prefixes)
         prefixes.extend(guild_prefixes)
         return prefixes
