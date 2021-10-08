@@ -1,4 +1,6 @@
+from __future__ import annotations
 import os
+from typing import List
 import discord
 import logging
 from dotenv import load_dotenv
@@ -14,7 +16,7 @@ class ModMail(commands.AutoShardedBot):
         load_dotenv('.env')
         self.config = Config()
         super().__init__(
-            command_prefix=commands.when_mentioned_or(*self.config.prefixes),
+            command_prefix=self.fetch_prefix,
             intents=discord.Intents.all(),
             case_insensitive=True,
             allowed_mentions=discord.AllowedMentions.none(),
@@ -60,10 +62,20 @@ class ModMail(commands.AutoShardedBot):
         print(f"Connected to: {len(self.voice_clients)} voice clients")
         print(f"Connected to: {len(self.private_channels)} private_channels")
 
-    async def blacklist_check(self, ctx: commands.Context):
+    async def blacklist_check(self, ctx: commands.Context) -> bool:
         if ctx.author.id in self.mongo.blacklist_cache:
             return False
         return True
 
     async def connect_listener(self):
         await self.mongo.get_blacklist_cache()
+
+    async def fetch_prefix(self, bot: ModMail, message: discord.Message) -> List[str]:
+        prefixes = [f"<@{bot.user.id}> ", f"<@!{bot.user.id}> "]
+        if message.guild is None:
+            prefixes.extend(self.config.prefixes)
+            return prefixes
+        data = await self.mongo.get_guild_data(message.guild.id, raise_error=False)
+        guild_prefixes = data.get('prefixes', self.config.prefixes)
+        prefixes.extend(guild_prefixes)
+        return prefixes
