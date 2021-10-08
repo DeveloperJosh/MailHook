@@ -179,6 +179,62 @@ class WebServer(commands.Cog):
         self.client.dispatch("transcript_channel_update", guild, channel)
         return web.json_response({"success": True})
 
+    async def check_setup(self, request: web.Request):
+        guild_id = request.headers.get("guild_id")
+        user_id = request.headers.get("user_id")
+        if guild_id is None or user_id is None:
+            raise web.HTTPBadRequest()
+        try:
+            guild_id = int(guild_id)
+            user_id = int(user_id)
+        except ValueError:
+            return web.json_response({"error": "Invalid guild id"})
+        guild = self.client.get_guild(guild_id)
+        if guild is None:
+            return web.json_response({"error": "Guild not found"})
+        member = guild.get_member(user_id)
+        if member is None:
+            return web.json_response({"error": "You are not in the guild."})
+        if not member.guild_permissions.administrator:
+            return web.json_response({"error": "You need administrator permissions to do that."})
+        guild_data = await self.client.mongo.get_guild_data(guild_id, raise_error=False)
+        if guild_data is None:
+            return web.json_response({"setup": False})
+        return web.json_response({"setup": True})
+
+    async def setup_guild(self, request: web.Request):
+        guild_id = request.headers.get("guild_id")
+        staff_role_id = request.headers.get("staff_role_id")
+        category_id = request.headers.get("category_id")
+        transcripts_id = request.headers.get("transcripts_id")
+        if guild_id is None or staff_role_id is None or category_id is None or transcripts_id is None:
+            raise web.HTTPBadRequest()
+        try:
+            guild_id = int(guild_id)
+            staff_role_id = int(staff_role_id)
+            category_id = int(category_id)
+            transcripts_id = int(transcripts_id)
+        except ValueError:
+            return web.json_response({"error": "Invalid guild id or role id or category id or transcripts id"})
+        guild = self.client.get_guild(guild_id)
+        if guild is None:
+            return web.json_response({"error": "Guild not found"})
+        staff_role = guild.get_role(staff_role_id)
+        if staff_role is None:
+            return web.json_response({"error": "Staff role not found"})
+        category = guild.get_channel(category_id)
+        if category is None:
+            return web.json_response({"error": "Category not found"})
+        transcripts = guild.get_channel(transcripts_id)
+        if transcripts is None:
+            return web.json_response({"error": "Transcripts channel not found"})
+        if not category.permissions_for(guild.me).manage_channels:
+            return web.json_response({"error": "I don't have permissions to create channels in the category."})
+        if not transcripts.permissions_for(guild.me).read_messages or not transcripts.permissions_for(guild.me).send_messages:
+            return web.json_response({"error": "I don't have permissions to read messages or send messages in the transcripts channel."})
+        await self.client.mongo.set_guild_data(guild.id, category=category.id, staff_role=staff_role.id, transcripts=transcripts.id)
+        return web.json_response({"success": True, "message": "Guild setup complete." if guild.me.guild_permissions.administrator else "The guild setup is complete, it is recommended that you grant me administrator permissions for the best experience."})
+
     async def get_guild_data(self, request: web.Request):
         guild_id = request.headers.get("guild_id")
         user_id = request.headers.get("user_id")
@@ -383,6 +439,8 @@ class WebServer(commands.Cog):
         get_own_user_resource = cors.add(app.router.add_resource("/users/me"))
         get_guilds_resource = cors.add(app.router.add_resource("/guilds"))
         get_guild_data_resource = cors.add(app.router.add_resource("/guild"))
+        check_setup_resource = cors.add(app.router.add_resource("/check_setup"))
+        setup_guild_resource = cors.add(app.router.add_resource("/setup_guild"))
         bot_stats_resource = cors.add(app.router.add_resource("/stats"))
         update_mod_role_resource = cors.add(app.router.add_resource("/update_mod_role"))
         update_category_resource = cors.add(app.router.add_resource("/update_category"))
@@ -394,6 +452,8 @@ class WebServer(commands.Cog):
         cors.add(get_own_user_resource.add_route("GET", self.get_own_user), self.cors_thing)
         cors.add(get_guilds_resource.add_route("GET", self.get_guilds), self.cors_thing)
         cors.add(get_guild_data_resource.add_route("GET", self.get_guild_data), self.cors_thing)
+        cors.add(check_setup_resource.add_route("GET", self.check_setup), self.cors_thing)
+        cors.add(setup_guild_resource.add_route("POST", self.setup_guild), self.cors_thing)
         cors.add(bot_stats_resource.add_route("GET", self.bot_stats), self.cors_thing)
         cors.add(update_mod_role_resource.add_route("POST", self.update_mod_role), self.cors_thing)
         cors.add(update_category_resource.add_route("POST", self.update_category), self.cors_thing)
