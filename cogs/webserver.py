@@ -204,6 +204,7 @@ class WebServer(commands.Cog):
             ticket_category = guild.get_channel(guild_data['category'])
             transcripts_channel = guild.get_channel(guild_data['transcripts'])
             current_tickets = await self.client.mongo.get_guild_modmail_threads(guild.id)
+            prefixes = self.client.config.prefixes.copy()
 
         return web.json_response({
             "id": str(guild.id),
@@ -234,7 +235,7 @@ class WebServer(commands.Cog):
                 "avatar": guild.owner.display_avatar.url
             } if guild.owner is not None else None,
             "settings": {
-                "prefixes": self.client.config.prefixes,
+                "prefixes": guild_data.get("prefixes", prefixes) if guild_data is not None else prefixes,
                 "modRole": {
                     "id": str(modrole.id),
                     "name": modrole.name,
