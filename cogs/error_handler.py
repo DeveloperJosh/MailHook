@@ -93,9 +93,13 @@ class ErrorHandling(commands.Cog):
                 "This command cannot be used in DMs."
             ))
         else:
+            await ctx.reply(embed=e(
+                f"{self.bot.config.emojis.no} Unknown Error!",
+                f"An unknown error has occurred.\n```{error}```"
+            ))
             error_text = "".join(traceback.format_exception(etype=type(error), value=error, tb=error.__traceback__))[:4000]
             try:
-                await self.bot.get_channel(self.bot.config.logs.cmd_errs).send(embed=e("Unknown Error", error_text))
+                await self.bot.get_channel(self.bot.config.logs.cmd_errs).send(embed=e("Unknown Error", f"```py\n{error_text}\n```"))
             except Exception:
                 traceback.print_exception(etype=type(error), value=error, tb=error.__traceback__)
 
