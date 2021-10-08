@@ -69,6 +69,8 @@
 
 ## 👀 Preview
 
+![](https://i.imgur.com/Lv03mou.png)
+![](https://i.imgur.com/J7a1FOi.png)
 ![](https://cdn.discordapp.com/attachments/859335247547990026/889355567339028490/unknown.png)
 ![](https://cdn.discordapp.com/attachments/859335247547990026/889355834746867783/unknown.png)
 ![](https://cdn.discordapp.com/attachments/859335247547990026/889355924819542057/unknown.png)
