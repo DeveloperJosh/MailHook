@@ -453,7 +453,7 @@ class WebServer(commands.Cog):
         cors.add(get_guilds_resource.add_route("GET", self.get_guilds), self.cors_thing)
         cors.add(get_guild_data_resource.add_route("GET", self.get_guild_data), self.cors_thing)
         cors.add(check_setup_resource.add_route("GET", self.check_setup), self.cors_thing)
-        cors.add(setup_guild_resource.add_route("POST", self.setup_guild), self.cors_thing)
+        cors.add(setup_guild_resource.add_route("GET", self.setup_guild), self.cors_thing)
         cors.add(bot_stats_resource.add_route("GET", self.bot_stats), self.cors_thing)
         cors.add(update_mod_role_resource.add_route("POST", self.update_mod_role), self.cors_thing)
         cors.add(update_category_resource.add_route("POST", self.update_category), self.cors_thing)
