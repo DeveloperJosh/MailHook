@@ -7,7 +7,7 @@ from typing import Union
 
 async def get_bot_help(bot: ModMail) -> discord.Embed:
     embed = discord.Embed(
-        description=f"My prefixes for are: {', '.join(['`'+p+'`' for p in bot.config.prefixes])}.",
+        description="Here are all my commands:",
         color=discord.Color.blurple()
     ).set_author(icon_url=bot.user.display_avatar.url, name="MailHook Help")
     for cog_name, cog in bot.cogs.items():
@@ -21,7 +21,7 @@ async def get_bot_help(bot: ModMail) -> discord.Embed:
         name="‎",
         value=f"[Invite Me](https://discord.com/oauth2/authorize?client_id={bot.user.id}&permissions=8&scope=bot%20applications.commands) | [Support Server](https://discord.gg/TeSHENet9M) | [Dashboard](https://mail-hook.site)",
         inline=False
-    )
+    ).set_thumbnail(url=bot.user.display_avatar.url)
 
 
 async def get_cog_help(bot: ModMail, cog: commands.Cog) -> discord.Embed:

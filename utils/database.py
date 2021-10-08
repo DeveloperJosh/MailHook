@@ -1,7 +1,7 @@
 import discord
 import motor.motor_asyncio as motor
 from utils.exceptions import NotSetup, UserAlreadyInAModmailThread
-from typing import *
+from typing import Optional, List
 
 
 class Database:
