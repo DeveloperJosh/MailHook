@@ -379,8 +379,9 @@ If you want to ignore a message you can start it with {' or '.join(['`' + p + '`
             return await message.reply(f"My prefixes are: {', '.join(['`' + p + '`' for p in prefixes])}")
         data = await self.bot.mongo.get_guild_data(message.guild.id)
         guild_prefixes = data.get('prefixes', [])
-        prefixes.extend(guild_prefixes)
-        await message.reply(f"My prefixes are: {', '.join(['`' + p + '`' for p in prefixes])}")
+        if not guild_prefixes:
+            return await message.reply(f"My prefixes are: {', '.join(['`' + p + '`' for p in prefixes])}")
+        await message.reply(f"My prefixes are: {', '.join(['`' + p + '`' for p in guild_prefixes])}")
 
     @commands.group(name="prefix", help="Manage the prefixes for the bot.")
     async def prefix(self, ctx: commands.Context):
@@ -399,6 +400,8 @@ If you want to ignore a message you can start it with {' or '.join(['`' + p + '`
         if g is None:
             g = {}
         prefixes = g.get("prefixes", self.bot.config.prefixes.copy())
+        if len(prefixes) >= 10:
+            return await ctx.reply(f"{self.bot.config.emojis.no} You can only have 10 prefixes.")
         if prefix in prefixes:
             return await ctx.reply(f"{self.bot.config.emojis.no} This prefix is already added.")
         prefixes.append(prefix)
