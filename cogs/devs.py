@@ -53,13 +53,14 @@ class Devs(commands.Cog):
     async def on_guild_join(self, guild: discord.Guild):
         send_embed = discord.Embed(
             title="👋 Hey there!",
-            description="""
+            description=f"""
 Thanks a lot for inviting me!
 You can set me up to collect DMs from members and send them directly to your staff them.
-If you are a server admin then please run the `/setup` slash command to get started.
+If you are a server admin then please visit **[this link](https://mail-hook.site/setup/{guild.id})** to setup the server.
 
 Here are some useful links:
 
+- [Dashboard](https://mail-hook.site)
 - [Support server](https://discord.gg/TeSHENet9M_)
 - [Github](https://github.com/DeveloperJosh/MailHook/)
 
