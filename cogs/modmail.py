@@ -377,7 +377,8 @@ If you want to ignore a message you can start it with {' or '.join(['`' + p + '`
         prefixes = self.bot.config.prefixes.copy()
         if not message.guild:
             return await message.reply(f"My prefixes are: {', '.join(['`' + p + '`' for p in prefixes])}")
-        data = await self.bot.mongo.get_guild_data(message.guild.id)
+        data = await self.bot.mongo.get_guild_data(message.guild.id, raise_error=False)
+        data = data or {}
         guild_prefixes = data.get('prefixes', [])
         if not guild_prefixes:
             return await message.reply(f"My prefixes are: {', '.join(['`' + p + '`' for p in prefixes])}")
