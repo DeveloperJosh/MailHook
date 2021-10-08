@@ -230,6 +230,18 @@ class WebServer(commands.Cog):
             return web.json_response({"error": "Transcripts channel not found"})
         if not category.permissions_for(guild.me).manage_channels:
             return web.json_response({"error": "I don't have permissions to create channels in the category."})
+        if not category.permissions_for(guild.me).manage_webhooks:
+            return web.json_response({"error": "I don't have permissions to create webhooks in the category."})
+        if not category.permissions_for(guild.me).read_message_history:
+            return web.json_response({"error": "I don't have permissions to read message history in the category."})
+        if not category.permissions_for(guild.me).use_external_emojis:
+            return web.json_response({"error": "I don't have permissions to use external emojis in the category."})
+        if not category.permissions_for(guild.me).add_reactions:
+            return web.json_response({"error": "I don't have permissions to add reactions in the category."})
+        if not category.permissions_for(guild.me).read_messages:
+            return web.json_response({"error": "I don't have permissions to read messages in the category."})
+        if not category.permissions_for(guild.me).send_messages:
+            return web.json_response({"error": "I don't have permissions to send messages in the category."})
         if not transcripts.permissions_for(guild.me).read_messages or not transcripts.permissions_for(guild.me).send_messages:
             return web.json_response({"error": "I don't have permissions to read messages or send messages in the transcripts channel."})
         await self.client.mongo.set_guild_data(guild.id, category=category.id, staff_role=staff_role.id, transcripts=transcripts.id)

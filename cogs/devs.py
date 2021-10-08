@@ -64,6 +64,17 @@ Here are some useful links:
 - [Support server](https://discord.gg/TeSHENet9M_)
 - [Github](https://github.com/DeveloperJosh/MailHook/)
 
+I require the following permissions:
+- Manage Channels
+- Manage Webhooks
+- Add Reactions
+- Embed Links
+- Use External Emojis
+- Read Messages
+- Send Messages
+
+Please make sure I have these permissions before continuing.
+
 """,
             color=discord.Color.blurple()
         ).set_author(name=self.bot.user.name, icon_url=self.bot.user.display_avatar.url
