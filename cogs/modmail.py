@@ -140,6 +140,8 @@ class Mailhook(commands.Cog, name="Mail Hook"):
         category = ctx.guild.get_channel(guild_data['category'])
         if category is None:
             raise TicketCategoryNotFound()
+        if staff_role not in ctx.author.roles:
+            raise NotStaff()
         embed = discord.Embed(color=discord.Color.blurple(), title="Modmail Configuration!")
         embed.add_field(name="Staff Role:", value=staff_role.mention)
         embed.add_field(name="Transcript Channel:", value=transcript_channel.mention if transcript_channel is not None else "No transcript channel. [Not Recommended]")
