@@ -71,8 +71,8 @@ class Mailhook(commands.Cog, name="Mail Hook"):
             final.update({"category": category.id})
         except commands.ChannelNotFound:
             return await main_msg.edit(f"{self.bot.config.emojis.no} I wasn't able to find that category.\n> Please re-run the command and try again.")
-        await category.edit(overwrites=overwrites)
         try:
+            await category.edit(overwrites=overwrites)
             transcripts = await category.create_text_channel('transcripts', topic="Modmail transcripts will be saved here.", overwrites=overwrites)
         except discord.Forbidden:
             return await main_msg.edit(embed=discord.Embed(

@@ -93,7 +93,7 @@ class ErrorHandling(commands.Cog):
                 "This command cannot be used in DMs."
             ))
         else:
-            await ctx.reply(embed=e(
+            await ctx.channel.send(embed=e(
                 f"{self.bot.config.emojis.no} Unknown Error!",
                 f"An unknown error has occurred.\n```{error}```"
             ))
