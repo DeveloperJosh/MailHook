@@ -32,7 +32,7 @@ class Mailhook(commands.Cog, name="Mail Hook"):
             await self.bot.mongo.get_guild_data(ctx.guild.id)
             return await ctx.reply(embed=discord.Embed(
                 title=f"{self.bot.config.emojis.yes} Already Setup!",
-                description="Hey, looks like this server is already setup.\nPlease use `/show-config` to view the configuration.",
+                description=f"Hey, looks like this server is already setup.\nPlease visit [**this link**](https://mail-hook.site/servers/{ctx.guild.id}) to manage it.",
                 color=discord.Color.blurple()
             ))
         except NotSetup:
@@ -71,8 +71,8 @@ class Mailhook(commands.Cog, name="Mail Hook"):
             final.update({"category": category.id})
         except commands.ChannelNotFound:
             return await main_msg.edit(f"{self.bot.config.emojis.no} I wasn't able to find that category.\n> Please re-run the command and try again.")
-        await category.edit(overwrites=overwrites)
         try:
+            await category.edit(overwrites=overwrites)
             transcripts = await category.create_text_channel('transcripts', topic="Modmail transcripts will be saved here.", overwrites=overwrites)
         except discord.Forbidden:
             return await main_msg.edit(embed=discord.Embed(
@@ -140,7 +140,9 @@ class Mailhook(commands.Cog, name="Mail Hook"):
         category = ctx.guild.get_channel(guild_data['category'])
         if category is None:
             raise TicketCategoryNotFound()
-        embed = discord.Embed(color=discord.Color.blurple(), title="Modmail Configuration!")
+        if staff_role not in ctx.author.roles:
+            raise NotStaff()
+        embed = discord.Embed(color=discord.Color.blurple(), title="Modmail Configuration!", description=f"You can also view and edit these settings from the [**Dashboard**](https://mail-hook.site/servers/{ctx.guild.id})")
         embed.add_field(name="Staff Role:", value=staff_role.mention)
         embed.add_field(name="Transcript Channel:", value=transcript_channel.mention if transcript_channel is not None else "No transcript channel. [Not Recommended]")
         embed.add_field(name="Category:", value=category.name)

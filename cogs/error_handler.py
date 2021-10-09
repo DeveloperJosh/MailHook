@@ -40,7 +40,7 @@ class ErrorHandling(commands.Cog):
         elif isinstance(error, NotSetup):
             await ctx.reply(embed=e(
                 f"{self.bot.config.emojis.no} Not Setup!",
-                "Looks like the server is not setup for modmail.\nPlease use `/setup` to set it up."
+                f"Looks like the server is not setup for modmail.\nPlease visit [**this link**](https://mail-hook.site/setup/{ctx.guild.id}) to set it up."
             ))
         elif isinstance(error, NotStaff):
             await ctx.reply(embed=e(
@@ -93,7 +93,7 @@ class ErrorHandling(commands.Cog):
                 "This command cannot be used in DMs."
             ))
         else:
-            await ctx.reply(embed=e(
+            await ctx.channel.send(embed=e(
                 f"{self.bot.config.emojis.no} Unknown Error!",
                 f"An unknown error has occurred.\n```{error}```"
             ))
