@@ -396,6 +396,7 @@ If you want to ignore a message you can start it with {' or '.join(['`' + p + '`
             return await ctx.reply(f"Your current prefixes are: {', '.join(['`' + prefix + '`' for prefix in prefixes])}\nYou can use the following commands to manage them:\n\n- `{ctx.clean_prefix}prefix add <prefix>`\n- `{ctx.clean_prefix}prefix remove <prefix>`")
 
     @prefix.command(name="add", help="Add a prefix to the bot.")
+    @commands.has_permissions(manage_guild=True)
     async def prefix_add(self, ctx: commands.Context, *, prefix: str = None):
         if prefix is None:
             return await ctx.reply(f"{self.bot.config.emojis.no} Please specify a prefix to add.")
@@ -412,6 +413,7 @@ If you want to ignore a message you can start it with {' or '.join(['`' + p + '`
         await ctx.reply(f"{self.bot.config.emojis.yes} Added `{prefix}` to your prefixes.")
 
     @prefix.command(name="remove", help="Remove a prefix from the bot.")
+    @commands.has_permissions(manage_guild=True)
     async def prefix_remove(self, ctx: commands.Context, *, prefix: str = None):
         if prefix is None:
             return await ctx.reply(f"{self.bot.config.emojis.no} Please specify a prefix to remove.")

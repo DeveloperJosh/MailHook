@@ -35,6 +35,11 @@ class ErrorHandling(commands.Cog):
             await ctx.reply(f"You are on cooldown for **{format_timespan(round(error.retry_after, 2))}**", delete_after=5)
         elif isinstance(error, commands.CommandNotFound):
             return
+        elif isinstance(error, commands.MissingPermissions):
+            await ctx.reply(embed=e(
+                f"{self.bot.config.emojis.no} Nah bro!",
+                "You need **{}** perms to run this command.".format(' '.join(error.missing_permissions[0].split('_')).title())
+            ))
         elif isinstance(error, commands.CheckFailure):
             return
         elif isinstance(error, NotSetup):
