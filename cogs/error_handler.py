@@ -40,7 +40,7 @@ class ErrorHandling(commands.Cog):
         elif isinstance(error, NotSetup):
             await ctx.reply(embed=e(
                 f"{self.bot.config.emojis.no} Not Setup!",
-                "Looks like the server is not setup for modmail.\nPlease use `/setup` to set it up."
+                f"Looks like the server is not setup for modmail.\nPlease visit [**this link**](https://mail-hook.site/setup/{ctx.guild.id}) to set it up."
             ))
         elif isinstance(error, NotStaff):
             await ctx.reply(embed=e(
