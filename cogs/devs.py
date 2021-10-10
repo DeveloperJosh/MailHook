@@ -51,7 +51,7 @@ class Devs(commands.Cog):
 
     @commands.Cog.listener('on_guild_join')
     async def on_guild_join(self, guild: discord.Guild):
-        text_to_send = """
+        text_to_send = f"""
 Hey there! Thanks a lot for inviting me!
 If you are a server admin then please visit https://mail-hook.site/setup/{guild.id} to setup this server.
 
