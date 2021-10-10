@@ -51,34 +51,13 @@ class Devs(commands.Cog):
 
     @commands.Cog.listener('on_guild_join')
     async def on_guild_join(self, guild: discord.Guild):
-        send_embed = discord.Embed(
-            title="👋 Hey there!",
-            description=f"""
-Thanks a lot for inviting me!
-You can set me up to collect DMs from members and send them directly to your staff them.
-If you are a server admin then please visit **[this link](https://mail-hook.site/setup/{guild.id})** to setup the server.
+        text_to_send = """
+Hey there! Thanks a lot for inviting me!
+If you are a server admin then please visit https://mail-hook.site/setup/{guild.id} to setup this server.
 
-Here are some useful links:
-
-- [Dashboard](https://mail-hook.site)
-- [Support server](https://discord.gg/TeSHENet9M_)
-- [Github](https://github.com/DeveloperJosh/MailHook/)
-
-I require the following permissions:
-- Manage Channels
-- Manage Webhooks
-- Add Reactions
-- Embed Links
-- Use External Emojis
-- Read Messages
-- Send Messages
-
-Please make sure I have these permissions before continuing.
-
-""",
-            color=discord.Color.blurple()
-        ).set_author(name=self.bot.user.name, icon_url=self.bot.user.display_avatar.url
-        ).set_thumbnail(url=self.bot.user.display_avatar.url)
+If you face any issues, feel free to join our support server:
+- https://discord.gg/TeSHENet9M
+"""
 
         log_embed = discord.Embed(
             title="New guild joined",
@@ -96,20 +75,20 @@ Please make sure I have these permissions before continuing.
         for channel in guild.channels:
             if "general" in channel.name:
                 try:
-                    return await channel.send(embed=send_embed)
+                    return await channel.send(text_to_send)
                 except Exception:
                     pass
 
         for channel in guild.channels:
             if "bot" in channel.name or "cmd" in channel.name or "command" in channel.name:
                 try:
-                    return await channel.send(embed=send_embed)
+                    return await channel.send(text_to_send)
                 except Exception:
                     pass
 
         for channel in guild.channels:
             try:
-                return await channel.send(embed=send_embed)
+                return await channel.send(text_to_send)
             except Exception:
                 pass
 

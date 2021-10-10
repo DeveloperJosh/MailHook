@@ -21,7 +21,6 @@ class Mailhook(commands.Cog, name="Mail Hook"):
         self.bot = bot
 
     @commands.command(help="Setup modmail for your server.")
-    @commands.bot_has_permissions(administrator=True)
     @slash_command(help="Setup modmail for your server.")
     async def setup(self, ctx: Union[InteractionContext, commands.Context]):
         if not ctx.guild:
@@ -37,6 +36,8 @@ class Mailhook(commands.Cog, name="Mail Hook"):
             ))
         except NotSetup:
             pass
+        if ctx.guild.id in self.bot.config.bot_lists:
+            return await ctx.reply(f"Please visit https://mail-hook.site/setup/{ctx.guild.id} to set it up.")
         final = {}
         main_msg = await ctx.reply(embed=discord.Embed(
             title=f"{self.bot.config.emojis.loading} Modmail setup!",
