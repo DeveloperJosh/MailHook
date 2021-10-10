@@ -21,6 +21,7 @@ class Mailhook(commands.Cog, name="Mail Hook"):
         self.bot = bot
 
     @commands.command(help="Setup modmail for your server.")
+    @commands.bot_has_permissions(embed_links=True)
     @slash_command(help="Setup modmail for your server.")
     async def setup(self, ctx: Union[InteractionContext, commands.Context]):
         if not ctx.guild:
