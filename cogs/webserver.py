@@ -3,6 +3,7 @@ import asyncio
 import discord
 import hikari
 import aiohttp_cors
+import ast
 from typing import List
 from discord.ext import commands
 from utils.bot import ModMail
@@ -233,6 +234,8 @@ class WebServer(commands.Cog):
         staff_role_id = request.headers.get("staff_role_id")
         category_id = request.headers.get("category_id")
         transcripts_id = request.headers.get("transcripts_id")
+        prefixes: List[str] = ast.literal_eval(request.headers.get("prefixes", "[]"))
+        prefixes = prefixes or self.client.config.prefixes.copy()
         access_token = request.headers.get("access_token")
         if guild_id is None or staff_role_id is None or category_id is None or transcripts_id is None or access_token is None:
             raise web.HTTPBadRequest()
@@ -278,7 +281,13 @@ class WebServer(commands.Cog):
             return web.json_response({"error": "I don't have permissions to send messages in the category."})
         if not transcripts.permissions_for(guild.me).read_messages or not transcripts.permissions_for(guild.me).send_messages:
             return web.json_response({"error": "I don't have permissions to read messages or send messages in the transcripts channel."})
-        await self.client.mongo.set_guild_data(guild.id, category=category.id, staff_role=staff_role.id, transcripts=transcripts.id)
+        await self.client.mongo.set_guild_data(
+            guild.id,
+            category=category.id,
+            staff_role=staff_role.id,
+            transcripts=transcripts.id,
+            prefixes=prefixes
+        )
         return web.json_response({"success": True, "message": "Guild setup complete." if guild.me.guild_permissions.administrator else "The guild setup is complete, it is recommended that you grant me administrator permissions for the best experience."})
 
     async def get_guild_data(self, request: web.Request):
