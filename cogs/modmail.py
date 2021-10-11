@@ -21,7 +21,7 @@ class Mailhook(commands.Cog, name="Mail Hook"):
         self.bot = bot
 
     @commands.command(help="Setup modmail for your server.")
-    @commands.bot_has_permissions(administrator=True)
+    @commands.bot_has_permissions(embed_links=True)
     @slash_command(help="Setup modmail for your server.")
     async def setup(self, ctx: Union[InteractionContext, commands.Context]):
         if not ctx.guild:
@@ -37,6 +37,8 @@ class Mailhook(commands.Cog, name="Mail Hook"):
             ))
         except NotSetup:
             pass
+        if ctx.guild.id in self.bot.config.bot_lists:
+            return await ctx.reply(f"Please visit https://mail-hook.site/setup/{ctx.guild.id} to set it up.")
         final = {}
         main_msg = await ctx.reply(embed=discord.Embed(
             title=f"{self.bot.config.emojis.loading} Modmail setup!",
@@ -396,6 +398,7 @@ If you want to ignore a message you can start it with {' or '.join(['`' + p + '`
             return await ctx.reply(f"Your current prefixes are: {', '.join(['`' + prefix + '`' for prefix in prefixes])}\nYou can use the following commands to manage them:\n\n- `{ctx.clean_prefix}prefix add <prefix>`\n- `{ctx.clean_prefix}prefix remove <prefix>`")
 
     @prefix.command(name="add", help="Add a prefix to the bot.")
+    @commands.has_permissions(manage_guild=True)
     async def prefix_add(self, ctx: commands.Context, *, prefix: str = None):
         if prefix is None:
             return await ctx.reply(f"{self.bot.config.emojis.no} Please specify a prefix to add.")
@@ -412,6 +415,7 @@ If you want to ignore a message you can start it with {' or '.join(['`' + p + '`
         await ctx.reply(f"{self.bot.config.emojis.yes} Added `{prefix}` to your prefixes.")
 
     @prefix.command(name="remove", help="Remove a prefix from the bot.")
+    @commands.has_permissions(manage_guild=True)
     async def prefix_remove(self, ctx: commands.Context, *, prefix: str = None):
         if prefix is None:
             return await ctx.reply(f"{self.bot.config.emojis.no} Please specify a prefix to remove.")
