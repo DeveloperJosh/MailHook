@@ -135,11 +135,19 @@ class WebServer(commands.Cog):
         susu = await request.json()
         role_id = susu.get("role_id")
         guild_id = susu.get("guild_id")
+        access_token = susu.get("access_token")
+        user = await self.get_user(access_token)
+        user_id = user.id
         if role_id is None or guild_id is None:
             raise web.HTTPBadRequest()
         guild = self.client.get_guild(int(guild_id))
         if guild is None:
             return web.json_response({"error": "Guild not found"})
+        member = guild.get_member(int(user_id))
+        if member is None:
+            return web.json_response({"error": "Not authorized"})
+        if not member.guild_permissions.manage_guild:
+            return web.json_response({"error": "Not authorized"})
         role = guild.get_role(int(role_id))
         if role is None:
             return web.json_response({"error": "Role not found"})
@@ -151,11 +159,19 @@ class WebServer(commands.Cog):
         susu = await request.json()
         category_id = susu.get("category_id")
         guild_id = susu.get("guild_id")
+        access_token = susu.get("access_token")
+        user = await self.get_user(access_token)
+        user_id = user.id
         if category_id is None or guild_id is None:
             raise web.HTTPBadRequest()
         guild = self.client.get_guild(int(guild_id))
         if guild is None:
             return web.json_response({"error": "Guild not found"})
+        member = guild.get_member(int(user_id))
+        if member is None:
+            return web.json_response({"error": "Not authorized"})
+        if not member.guild_permissions.manage_guild:
+            return web.json_response({"error": "Not authorized"})
         category = guild.get_channel(int(category_id))
         if category is None:
             return web.json_response({"error": "Category not found"})
@@ -167,11 +183,19 @@ class WebServer(commands.Cog):
         susu = await request.json()
         channel_id = susu.get("channel_id")
         guild_id = susu.get("guild_id")
+        access_token = susu.get("access_token")
+        user = await self.get_user(access_token)
+        user_id = user.id
         if channel_id is None or guild_id is None:
             raise web.HTTPBadRequest()
         guild = self.client.get_guild(int(guild_id))
         if guild is None:
             return web.json_response({"error": "Guild not found"})
+        member = guild.get_member(int(user_id))
+        if member is None:
+            return web.json_response({"error": "Not authorized"})
+        if not member.guild_permissions.manage_guild:
+            return web.json_response({"error": "Not authorized"})
         channel = guild.get_channel(int(channel_id))
         if channel is None:
             return web.json_response({"error": "Channel not found"})
@@ -181,9 +205,11 @@ class WebServer(commands.Cog):
 
     async def check_setup(self, request: web.Request):
         guild_id = request.headers.get("guild_id")
-        user_id = request.headers.get("user_id")
-        if guild_id is None or user_id is None:
+        access_token = request.headers.get("access_token")
+        if guild_id is None or access_token is None:
             raise web.HTTPBadRequest()
+        user = await self.get_user(access_token)
+        user_id = user.id
         try:
             guild_id = int(guild_id)
             user_id = int(user_id)
@@ -195,8 +221,8 @@ class WebServer(commands.Cog):
         member = guild.get_member(user_id)
         if member is None:
             return web.json_response({"error": "You are not in the guild."})
-        if not member.guild_permissions.administrator:
-            return web.json_response({"error": "You need administrator permissions to do that."})
+        if not member.guild_permissions.manage_guild:
+            return web.json_response({"error": "You need manage_guild permissions to do that."})
         guild_data = await self.client.mongo.get_guild_data(guild_id, raise_error=False)
         if guild_data is None:
             return web.json_response({"setup": False})
@@ -207,8 +233,11 @@ class WebServer(commands.Cog):
         staff_role_id = request.headers.get("staff_role_id")
         category_id = request.headers.get("category_id")
         transcripts_id = request.headers.get("transcripts_id")
-        if guild_id is None or staff_role_id is None or category_id is None or transcripts_id is None:
+        access_token = request.headers.get("access_token")
+        if guild_id is None or staff_role_id is None or category_id is None or transcripts_id is None or access_token is None:
             raise web.HTTPBadRequest()
+        user = await self.get_user(access_token)
+        user_id = user.id
         try:
             guild_id = int(guild_id)
             staff_role_id = int(staff_role_id)
@@ -219,6 +248,11 @@ class WebServer(commands.Cog):
         guild = self.client.get_guild(guild_id)
         if guild is None:
             return web.json_response({"error": "Guild not found"})
+        member = guild.get_member(user_id)
+        if member is None:
+            return web.json_response({"error": "Unauthorized"})
+        if not member.guild_permissions.manage_guild:
+            return web.json_response({"error": "Unauthorized"})
         staff_role = guild.get_role(staff_role_id)
         if staff_role is None:
             return web.json_response({"error": "Staff role not found"})
@@ -249,10 +283,12 @@ class WebServer(commands.Cog):
 
     async def get_guild_data(self, request: web.Request):
         guild_id = request.headers.get("guild_id")
-        user_id = request.headers.get("user_id")
-        print(user_id, guild_id)
-        if guild_id is None or user_id is None:
+        access_token = request.headers.get("access_token")
+        if guild_id is None or access_token is None:
             raise web.HTTPBadRequest()
+        user = await self.get_user(access_token)
+        user_id = user.id
+        print(user_id, guild_id)
         try:
             int(guild_id)
             int(user_id)
