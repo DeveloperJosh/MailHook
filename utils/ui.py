@@ -1,7 +1,6 @@
 import discord
 from discord.ext import commands
 from typing import Union, Optional, List
-from handler import InteractionContext
 
 
 class Confirm(discord.ui.View):
