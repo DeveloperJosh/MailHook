@@ -7,7 +7,7 @@ from handler import SlashCommandChoice as Choice
 from cogs.error_handler import EphemeralContext
 from utils.exceptions import GuildOnlyPls, NotAdmin, NotSetup, NoBots, NotStaff, ModRoleNotFound, TicketCategoryNotFound, DMsDisabled
 from utils.bot import ModMail
-from utils.ui import ServersDropdown, ServersDropdownView, Confirm
+from utils.ui import PaginatorView, ServersDropdown, ServersDropdownView, Confirm
 from utils.message import wait_for_msg
 from utils.tickets_core import start_modmail_thread, get_webhook, prepare_transcript, send_modmail_message
 from utils.converters import SettingConverter
@@ -236,6 +236,35 @@ All your messages will be send to the staff team.
                 inline=True
             )
         return await ctx.reply(embed=embed)
+
+    @commands.command(name="transcripts", help="View all the modmail transcripts.")
+    @slash_command(name="transcripts", help="View all the modmail transcripts.")
+    async def mailhook_transcripts(self, ctx: Union[commands.Context, InteractionContext]):
+        if not ctx.guild:
+            raise GuildOnlyPls()
+        guild_data = await self.bot.mongo.get_guild_data(ctx.guild.id)
+        if ctx.guild.get_role(guild_data['staff_role']) not in ctx.author.roles:
+            raise NotStaff()
+        transcripts = guild_data.get("ticket_transcripts", {})
+        embed = discord.Embed(
+            title="Guild transcripts",
+            color=discord.Color.blurple(),
+            description=f"This server has no transcripts.\nYou can also view the transcripts here: https://mail-hook.site/transcripts/{ctx.guild.id}"
+        )
+        paginator = commands.Paginator(prefix="", suffix="")
+        for num, transcript_id in enumerate(transcripts):
+            paginator.add_line(f"`{num}.` [{transcript_id}](https://mail-hook.site/viewticket/{ctx.guild.id}/{transcript_id})")
+        embeds = []
+        for page in paginator.pages:
+            embed.description = page
+            embeds.append(embed)
+        if len(embeds) == 0:
+            return await ctx.reply(embed=embed)
+        elif len(embeds) == 1:
+            return await ctx.reply(embed=embeds[0])
+        else:
+            view = PaginatorView(ctx, embeds)
+            return await ctx.reply(embeds[0], view=view)
 
     @commands.Cog.listener('on_message')
     async def modmail_dm(self, message: discord.Message):
