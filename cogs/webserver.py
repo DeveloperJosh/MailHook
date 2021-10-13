@@ -295,7 +295,10 @@ class WebServer(commands.Cog):
         access_token = request.headers.get("access_token")
         if guild_id is None or access_token is None:
             raise web.HTTPBadRequest()
-        user = await self.get_user(access_token)
+        try:
+            user = await self.get_user(access_token)
+        except hikari.UnauthorizedError:
+            return web.json_response({"error": "Unauthorized"})
         user_id = user.id
         print(user_id, guild_id)
         try:
@@ -316,6 +319,15 @@ class WebServer(commands.Cog):
             modrole = guild.get_role(guild_data['staff_role'])
             ticket_category = guild.get_channel(guild_data['category'])
             transcripts_channel = guild.get_channel(guild_data['transcripts'])
+            guild_transcripts = [{
+                "ticketId": t_id,
+                "ticketUser": (lambda user: {
+                    "id": user.id if user is not None else t_data['user_id'],
+                    "username": user.name if user is not None else "Unknown User",
+                    "discriminator": str(user.discriminator) if user is not None else "0000",
+                    "avatar": user.display_avatar.url if user is not None else "https://cdn.discordapp.com/embed/avatars/0.png"
+                })(self.client.get_user(t_data['user_id'])),
+            } for t_id, t_data in guild_data.get('ticket_transcripts', {}).items()]
             current_tickets = await self.client.mongo.get_guild_modmail_threads(guild.id)
             prefixes = self.client.config.prefixes.copy()
 
@@ -365,7 +377,8 @@ class WebServer(commands.Cog):
                 "currentTickets": [{
                     "userId": str(ticket['_id']),
                     "channelId": str(ticket['channel_id'])
-                } for ticket in current_tickets]
+                } for ticket in current_tickets],
+                "guildTranscripts": guild_transcripts
             } if guild_data is not None else None,
         })
 
@@ -488,6 +501,75 @@ class WebServer(commands.Cog):
             "html": final
         })
 
+    async def get_ticket_html_new(self, request: web.Request):
+        final = ""
+        default_avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
+        guild_id = request.headers.get("guild_id")
+        ticket_id = request.headers.get("ticket_id")
+        access_token = request.headers.get("access_token")
+
+        def format_error(err: str) -> str:
+            return f"<h1 class='text-white font-bold text-center text-3xl'> ERROR: {err} </h1>"
+
+        if guild_id is None or ticket_id is None or access_token is None:
+            final = format_error("Missing guild_id or ticket_id in the URL OR missing access_token in the headers")
+            return web.json_response({"html": final})
+        try:
+            user = await self.get_user(access_token)
+        except hikari.UnauthorizedError:
+            return web.json_response({"html": format_error("Invalid access token in headers")})
+
+        try:
+            int(guild_id)
+        except ValueError:
+            final = format_error("Guild ID passed in the URL is not an integer")
+            return web.json_response({"html": final})
+
+        guild = self.client.get_guild(int(guild_id))
+        if guild is None:
+            return web.json_response({
+                "html": format_error("Invalid guild ID passed in the URL, unable to find guild.")
+            })
+
+        member = guild.get_member(int(user.id))
+        if member is None:
+            return web.json_response({
+                "html": format_error("You are not authorized to view tickets from this guild.")
+            })
+        ticket = await self.client.mongo.get_guild_ticket_transcript(int(guild_id), ticket_id)
+        if ticket is None:
+            return web.json_response({
+                "html": format_error("Invalid ticket ID passed in the URL, unable to find ticket.")
+            })
+        if ticket['user_id'] != member.id and not member.guild_permissions.manage_guild:
+            return web.json_response({
+                "html": format_error("You are not authorized to view this ticket from this guild.")
+            })
+
+        transcript_db = self.client.get_channel(self.client.config.transcript_db_channel)
+        ticket_message = await transcript_db.fetch_message(ticket['message_id'])
+        attachment = ticket_message.attachments[0]
+        bytes_data = await attachment.read()
+        text_data = bytes_data.decode()
+        for text_line in text_data.split("\n\n"):
+            lines = text_line.split(" | ", 3)
+            if len(lines) >= 3:
+                user_name = lines[0]
+                actual_message_content = lines[3]
+                actual_message_content = actual_message_content.replace("<", "&lt;").replace(">", "&gt;")
+                member_id = lines[1]
+                member = guild.get_member(int(member_id))
+                final += f"""
+                    <div class='discord-message flex'>
+                        <img class="rounded-full" height="50px" width="50px" src={member.display_avatar.url if member is not None else (default_avatar if len(user_name.split("#")) == 3 else (ticket_message.author.display_avatar.url if ticket_message.author is not None else default_avatar))} />
+                        <div class="author-and-message flex flex-col justify-center h-full">
+                            <h1 class="font-bold text-white text-xl">{member or user_name}</h1>
+                            <p class="text-white">{actual_message_content}</p>
+                        </div>
+                    </div>
+                """
+        return web.json_response({"html": final})
+
     async def start_server(self):
         app = web.Application()
         cors = aiohttp_cors.setup(app)
@@ -503,6 +585,7 @@ class WebServer(commands.Cog):
         update_category_resource = cors.add(app.router.add_resource("/update_category"))
         update_transcripts_resource = cors.add(app.router.add_resource("/update_transcripts"))
         get_ticket_html_resource = cors.add(app.router.add_resource("/get_ticket_html"))
+        get_ticket_html_new_resource = cors.add(app.router.add_resource("/get_ticket_html_new"))
         get_ticket_url_resource = cors.add(app.router.add_resource("/get_ticket_url"))
 
         cors.add(callback_resource.add_route("POST", self.callback), self.cors_thing)
@@ -516,6 +599,7 @@ class WebServer(commands.Cog):
         cors.add(update_category_resource.add_route("POST", self.update_category), self.cors_thing)
         cors.add(update_transcripts_resource.add_route("POST", self.update_transcript_channel), self.cors_thing)
         cors.add(get_ticket_html_resource.add_route("GET", self.get_ticket_html), self.cors_thing)
+        cors.add(get_ticket_html_new_resource.add_route("GET", self.get_ticket_html_new), self.cors_thing)
         cors.add(get_ticket_url_resource.add_route("GET", self.get_ticket_url), self.cors_thing)
 
         runner = web.AppRunner(app)
