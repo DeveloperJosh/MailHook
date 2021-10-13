@@ -4,6 +4,7 @@ from utils.bot import ModMail
 from typing import Optional, Dict, Union
 from utils.exceptions import UserAlreadyInAModmailThread
 from io import BytesIO
+from uuid import uuid4
 
 
 webhook_cache: Dict[int, discord.Webhook] = {}
@@ -59,17 +60,30 @@ async def get_webhook(bot: ModMail, channel_id: int) -> discord.Webhook:
 
 
 async def prepare_transcript(bot: ModMail, channel_id: int, guild_id: int, guild_data: Optional[dict] = None):
+
+    # Creating the ticket `file`
     channel = bot.get_channel(channel_id)
-    data = guild_data or await bot.mongo.get_guild_data(guild_id)
-    transcript_channel = bot.get_channel(data['transcripts'])
-    if transcript_channel is None:
-        return
     text = ""
     all_msgs = await channel.history(limit=None).flatten()
     for msg in all_msgs[::-1]:
         content = msg.content.replace("\n\n", "\n‎\n")
-        # TODO: attachments and stickers
         text += f"{msg.author} | {channel.name[7:] if len(str(msg.author).split('#')) == 3 else msg.author.id} | {msg.id} | {content}\n\n"
-    file = discord.File(BytesIO(text.encode("utf-8")), filename=f"{channel.name}.txt")
-    msg = await transcript_channel.send(content=channel.name[7:], file=file)
-    await transcript_channel.send(f"You can view this ticket at https://mail-hook.site/tickets/{msg.guild.id}/{msg.channel.id}/{msg.id}")
+
+    # Generating an ID for the ticket and sending the file in secret channel for storing it lolll
+    randomly_generator_id = str(uuid4())
+    transcript_db_channel = bot.get_channel(bot.config.transcript_db_channel)
+    msg = await transcript_db_channel.send(file=discord.File(BytesIO(text.encode("utf-8")), filename=f"{channel.name}.txt"))
+
+    # Storing the ticket ID and ticket-user ID in the database
+    data = guild_data or await bot.mongo.get_guild_data(guild_id)
+    ticket_transcripts = data.get("ticket_transcripts", {})
+    ticket_transcripts[randomly_generator_id] = {
+        "user_id": int(channel.name[7:]),
+        "message_id": msg.id,
+    }
+    await bot.mongo.set_guild_data(guild_id, ticket_transcripts=ticket_transcripts)
+
+    # Sending the link and the file copy in the guild transcripts channel
+    guild_transcripts_channel = bot.get_channel(data['transcripts'])
+    if guild_transcripts_channel is not None:
+        await guild_transcripts_channel.send(content=f"You can view this ticket here: https://mail-hook.site/viewticket/{guild_id}/{randomly_generator_id}", file=discord.File(BytesIO(text.encode("utf-8")), filename=f"{channel.name}.txt"))
