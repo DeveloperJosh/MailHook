@@ -52,6 +52,10 @@ class Database:
     async def delete_channel_modmail_thread(self, channel_id: int):
         return await self.modmail_data.delete_one({"channel_id": channel_id})
 
+    async def get_guild_ticket_transcript(self, guild_id: int, ticket_id: str) -> Optional[dict]:
+        guild_data = await self.guild_data.find_one({"_id": guild_id}) or {}
+        return guild_data.get("ticket_transcripts", {}).get(ticket_id)
+
     async def blacklist(self, user_id: int, reason: str):
         return await self.blacklist_data.update_one(
             filter={"_id": user_id},
