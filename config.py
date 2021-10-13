@@ -29,3 +29,4 @@ class Config:
         self.owners = [321750582912221184, 558861606063308822]
         self.client_secret = os.environ.get('CLIENT_SECRET')
         self.bot_lists = [733135548566470726, 333949691962195969]
+        self.transcript_db_channel = 897480469870948432
