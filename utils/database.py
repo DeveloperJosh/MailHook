@@ -15,8 +15,11 @@ class Database:
 
     async def get_guild_data(self, guild_id: int, raise_error: bool = True) -> Optional[dict]:
         data = await self.guild_data.find_one({"_id": guild_id})
-        if data is None and raise_error:
-            raise NotSetup()
+        if data is None:
+            if raise_error:
+                raise NotSetup()
+            else:
+                return None
         if data.get('staff_role') is None:
             if raise_error:
                 raise NotSetup()
