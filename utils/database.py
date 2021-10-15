@@ -17,6 +17,11 @@ class Database:
         data = await self.guild_data.find_one({"_id": guild_id})
         if data is None and raise_error:
             raise NotSetup()
+        if data.get('staff_role') is None:
+            if raise_error:
+                raise NotSetup()
+            else:
+                return None
         return data
 
     async def set_guild_data(self, guild_id: int, **kwargs):
