@@ -330,6 +330,7 @@ class WebServer(commands.Cog):
             } for t_id, t_data in guild_data.get('ticket_transcripts', {}).items()]
             current_tickets = await self.client.mongo.get_guild_modmail_threads(guild.id)
             prefixes = self.client.config.prefixes.copy()
+            templates = guild_data.get('templates', {})
 
         return web.json_response({
             "id": str(guild.id),
@@ -378,7 +379,8 @@ class WebServer(commands.Cog):
                     "userId": str(ticket['_id']),
                     "channelId": str(ticket['channel_id'])
                 } for ticket in current_tickets],
-                "guildTranscripts": guild_transcripts
+                "guildTranscripts": guild_transcripts,
+                "templates": [{"name": temp_name, "description": template['description'], "content": template['content']} for temp_name, template in templates.items()]
             } if guild_data is not None else None,
         })
 
