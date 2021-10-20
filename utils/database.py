@@ -27,6 +27,10 @@ class Database:
                 return None
         return data
 
+    async def get_prefixes(self, guild_id: int) -> Optional[List[str]]:
+        guild_data = await self.guild_data.find_one({"_id": guild_id}) or {}
+        return guild_data.get("prefixes", [])
+
     async def set_guild_data(self, guild_id: int, **kwargs):
         return await self.guild_data.update_one(
             filter={"_id": guild_id},

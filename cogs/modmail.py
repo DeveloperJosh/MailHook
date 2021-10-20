@@ -410,9 +410,7 @@ If you want to ignore a message you can start it with {' or '.join(['`' + p + '`
         prefixes = self.bot.config.prefixes.copy()
         if not message.guild:
             return await message.reply(f"My prefixes are: {', '.join(['`' + p + '`' for p in prefixes])}")
-        data = await self.bot.mongo.get_guild_data(message.guild.id, raise_error=False)
-        data = data or {}
-        guild_prefixes = data.get('prefixes', [])
+        guild_prefixes = await self.bot.mongo.get_prefixes(message.guild.id)
         if not guild_prefixes:
             return await message.reply(f"My prefixes are: {', '.join(['`' + p + '`' for p in prefixes])}")
         await message.reply(f"My prefixes are: {', '.join(['`' + p + '`' for p in guild_prefixes])}")
@@ -420,10 +418,9 @@ If you want to ignore a message you can start it with {' or '.join(['`' + p + '`
     @commands.group(name="prefix", help="Manage the prefixes for the bot.")
     async def prefix(self, ctx: commands.Context):
         if ctx.invoked_subcommand is None:
-            g = await self.bot.mongo.get_guild_data(ctx.guild.id, raise_error=False)
-            if g is None:
-                g = {}
-            prefixes = g.get("prefixes", self.bot.config.prefixes.copy())
+            prefixes = await self.bot.mongo.get_prefixes(ctx.guild.id)
+            if not prefixes:
+                prefixes = self.bot.config.prefixes.copy()
             return await ctx.reply(f"Your current prefixes are: {', '.join(['`' + prefix + '`' for prefix in prefixes])}\nYou can use the following commands to manage them:\n\n- `{ctx.clean_prefix}prefix add <prefix>`\n- `{ctx.clean_prefix}prefix remove <prefix>`")
 
     @prefix.command(name="add", help="Add a prefix to the bot.")
@@ -431,10 +428,9 @@ If you want to ignore a message you can start it with {' or '.join(['`' + p + '`
     async def prefix_add(self, ctx: commands.Context, *, prefix: str = None):
         if prefix is None:
             return await ctx.reply(f"{self.bot.config.emojis.no} Please specify a prefix to add.")
-        g = await self.bot.mongo.get_guild_data(ctx.guild.id, raise_error=False)
-        if g is None:
-            g = {}
-        prefixes = g.get("prefixes", self.bot.config.prefixes.copy())
+        prefixes = await self.bot.mongo.get_prefixes(ctx.guild.id)
+        if not prefixes:
+            prefixes = self.bot.config.prefixes.copy()
         if len(prefixes) >= 10:
             return await ctx.reply(f"{self.bot.config.emojis.no} You can only have 10 prefixes.")
         if prefix in prefixes:
@@ -448,10 +444,9 @@ If you want to ignore a message you can start it with {' or '.join(['`' + p + '`
     async def prefix_remove(self, ctx: commands.Context, *, prefix: str = None):
         if prefix is None:
             return await ctx.reply(f"{self.bot.config.emojis.no} Please specify a prefix to remove.")
-        g = await self.bot.mongo.get_guild_data(ctx.guild.id, raise_error=False)
-        if g is None:
-            g = {}
-        prefixes = g.get("prefixes", self.bot.config.prefixes.copy())
+        prefixes = await self.bot.mongo.get_prefixes(ctx.guild.id)
+        if not prefixes:
+            prefixes = self.bot.config.prefixes.copy()
         if prefix not in prefixes:
             return await ctx.reply(f"{self.bot.config.emojis.no} This prefix is not added.")
         if len(prefixes) == 1:
