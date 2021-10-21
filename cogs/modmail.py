@@ -266,6 +266,9 @@ All your messages will be send to the staff team.
             view = PaginatorView(ctx, embeds)
             return await ctx.reply(embeds[0], view=view)
 
+    def format_ticket_message(self, message: str) -> str:
+        return ""
+
     @commands.Cog.listener('on_message')
     async def modmail_dm(self, message: discord.Message):
         if message.author.bot:
@@ -312,10 +315,10 @@ All your messages will be send to the staff team.
             if message.author.id in dropdown_concurrency:
                 dropdown_concurrency.remove(message.author.id)
             channel = await start_modmail_thread(self.bot, final_guild.id, message.author.id)
-            role = final_guild.get_role(final_mutual_guilds[final_guild]['staff_role'])
+            ping_staff = final_mutual_guilds[final_guild].get('ping_staff', True)
             await channel.send(
-                f"{role.mention if role is not None else 'Hey moderators,'} {message.author.mention} has opened a modmail thread.",
-                allowed_mentions=discord.AllowedMentions.all()
+                f"<@&{final_mutual_guilds[final_guild]['staff_role']}> {message.author.mention} has opened a modmail thread.",
+                allowed_mentions=discord.AllowedMentions.all() if ping_staff else discord.AllowedMentions.none()
             )
             await channel.send(
                 f"""

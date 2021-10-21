@@ -156,6 +156,26 @@ class WebServer(commands.Cog):
         self.client.dispatch("mod_role_update", guild, role)
         return web.json_response({"success": True})
 
+    async def toggle_modping(self, request: web.Request):
+        susu = await request.json()
+        guild_id = susu.get("guild_id")
+        access_token = susu.get("access_token")
+        if guild_id is None or access_token is None:
+            raise web.HTTPBadRequest()
+        user = await self.get_user(access_token)
+        user_id = user.id
+        guild = self.client.get_guild(int(guild_id))
+        if guild is None:
+            return web.json_response({"error": "Guild not found"})
+        member = guild.get_member(int(user_id))
+        if member is None:
+            return web.json_response({"error": "Not authorized"})
+        if not member.guild_permissions.manage_guild:
+            return web.json_response({"error": "Not authorized"})
+        guild_data = await self.client.mongo.get_guild_data(guild_id=int(guild_id), raise_error=False)
+        await self.client.mongo.set_guild_data(guild_id=int(guild_id), ping_staff=not guild_data.get("ping_staff", True))
+        return web.json_response({"success": True})
+
     async def update_category(self, request: web.Request):
         susu = await request.json()
         category_id = susu.get("category_id")
@@ -317,6 +337,7 @@ class WebServer(commands.Cog):
         guild_data = await self.client.mongo.get_guild_data(guild.id, raise_error=False)
         if guild_data is not None:
             modrole = guild.get_role(guild_data['staff_role'])
+            ping_staff = guild_data.get("ping_staff", True)
             ticket_category = guild.get_channel(guild_data['category'])
             transcripts_channel = guild.get_channel(guild_data['transcripts'])
             guild_transcripts = [{
@@ -331,6 +352,18 @@ class WebServer(commands.Cog):
             current_tickets = await self.client.mongo.get_guild_modmail_threads(guild.id)
             prefixes = self.client.config.prefixes.copy()
             templates = guild_data.get('templates', {})
+            ticket_open_message = guild_data.get('ticket_open_message', "{staff_role_mention} {user_mention} has opened a modmail thread.")
+            ticket_close_message = guild_data.get('ticket_close_message', "This modmail thread has been closed by {moderator_mention}")
+            staff_ticket_open_message = guild_data.get('staff_ticket_open_message', """
+Hey there, A modmail ticket has been started by a staff member.
+
+**Staff Member:** {moderator_mention}
+**Server:** {server}
+**Reason:** {reason}
+
+You can respond to this modmail ticket by messaging here
+All your messages will be send to the staff team.
+            """)
 
         return web.json_response({
             "id": str(guild.id),
@@ -367,6 +400,7 @@ class WebServer(commands.Cog):
                     "name": modrole.name,
                     "color": str(modrole.color),
                 } if modrole is not None else None,
+                "pingModRole": ping_staff,
                 "ticketCategory": {
                     "id": str(ticket_category.id),
                     "name": ticket_category.name,
@@ -380,9 +414,49 @@ class WebServer(commands.Cog):
                     "channelId": str(ticket['channel_id'])
                 } for ticket in current_tickets],
                 "guildTranscripts": guild_transcripts,
-                "templates": [{"name": temp_name, "description": template['description'], "content": template['content']} for temp_name, template in templates.items()]
+                "templates": [{"name": temp_name, "description": template['description'], "content": template['content']} for temp_name, template in templates.items()],
+
+                "ticketOpenMessage": ticket_open_message,
+                "ticketCloseMessage": ticket_close_message,
+                "staffTicketOpenMessage": staff_ticket_open_message,
             } if guild_data is not None else None,
         })
+
+    async def update_ticket_message(self, request: web.Request):
+        guild_id = request.headers.get("guild_id")
+        access_token = request.headers.get("access_token")
+        message = request.headers.get("message")
+        message_type = request.headers.get("message_type")
+        if guild_id is None or access_token is None or message is None or message_type is None:
+            raise web.HTTPBadRequest()
+        try:
+            user = await self.get_user(access_token)
+        except hikari.UnauthorizedError:
+            return web.json_response({"error": "Unauthorized"})
+        user_id = user.id
+        print(user_id, guild_id)
+        try:
+            int(guild_id)
+            int(user_id)
+        except ValueError:
+            return web.json_response({"error": "Invalid guild id or user id"})
+        guild = self.client.get_guild(int(guild_id))
+        if guild is None:
+            return web.json_response({"error": "Guild not found"})
+        member = guild.get_member(int(user_id))
+        if member is None:
+            return web.json_response({"error": "Member not found"})
+        if not member.guild_permissions.manage_guild:
+            return web.json_response({"error": "Insufficient permissions"})
+        if message_type == "ticket_open_message":
+            await self.client.mongo.set_guild_data(guild.id, ticket_open_message=message)
+        elif message_type == "ticket_close_message":
+            await self.client.mongo.set_guild_data(guild.id, ticket_close_message=message)
+        elif message_type == "staff_ticket_open_message":
+            await self.client.mongo.set_guild_data(guild.id, staff_ticket_open_message=message)
+        else:
+            return web.json_response({"error": "Invalid message type"})
+        return web.json_response({"success": True})
 
     async def bot_stats(self, request: web.Request):
         return web.json_response({
@@ -584,8 +658,10 @@ class WebServer(commands.Cog):
         setup_guild_resource = cors.add(app.router.add_resource("/setup_guild"))
         bot_stats_resource = cors.add(app.router.add_resource("/stats"))
         update_mod_role_resource = cors.add(app.router.add_resource("/update_mod_role"))
+        update_ping_staff_resource = cors.add(app.router.add_resource("/update_ping_staff"))
         update_category_resource = cors.add(app.router.add_resource("/update_category"))
         update_transcripts_resource = cors.add(app.router.add_resource("/update_transcripts"))
+        update_ticket_message_resource = cors.add(app.router.add_resource("/update_ticket_message"))
         get_ticket_html_resource = cors.add(app.router.add_resource("/get_ticket_html"))
         get_ticket_html_new_resource = cors.add(app.router.add_resource("/get_ticket_html_new"))
         get_ticket_url_resource = cors.add(app.router.add_resource("/get_ticket_url"))
@@ -598,8 +674,10 @@ class WebServer(commands.Cog):
         cors.add(setup_guild_resource.add_route("GET", self.setup_guild), self.cors_thing)
         cors.add(bot_stats_resource.add_route("GET", self.bot_stats), self.cors_thing)
         cors.add(update_mod_role_resource.add_route("POST", self.update_mod_role), self.cors_thing)
+        cors.add(update_ping_staff_resource.add_route("POST", self.toggle_modping), self.cors_thing)
         cors.add(update_category_resource.add_route("POST", self.update_category), self.cors_thing)
         cors.add(update_transcripts_resource.add_route("POST", self.update_transcript_channel), self.cors_thing)
+        cors.add(update_ticket_message_resource.add_route("GET", self.update_ticket_message), self.cors_thing)
         cors.add(get_ticket_html_resource.add_route("GET", self.get_ticket_html), self.cors_thing)
         cors.add(get_ticket_html_new_resource.add_route("GET", self.get_ticket_html_new), self.cors_thing)
         cors.add(get_ticket_url_resource.add_route("GET", self.get_ticket_url), self.cors_thing)
