@@ -1,4 +1,4 @@
-<h1 align="center"> <img height="100px" src="https://cdn.discordapp.com/attachments/859335247547990026/889351484116983818/icons8-mail-96.png"> </h1>
+<h1 align="center"> <img height="100px" src="https://cdn.discordapp.com/attachments/859335247547990026/900632166935961651/mailhook.png"> </h1>
 
 <h1 align="center"> MailHook </h1>
 <h3 align="center"> Modern modmail for modern Discord servers. </h3>
