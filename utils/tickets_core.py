@@ -86,4 +86,4 @@ async def prepare_transcript(bot: ModMail, channel_id: int, guild_id: int, guild
     # Sending the link and the file copy in the guild transcripts channel
     guild_transcripts_channel = bot.get_channel(data['transcripts'])
     if guild_transcripts_channel is not None:
-        await guild_transcripts_channel.send(content=f"You can view this ticket here: https://mail-hook.site/viewticket/{guild_id}/{randomly_generator_id}", file=discord.File(BytesIO(text.encode("utf-8")), filename=f"{channel.name}.txt"))
+        await guild_transcripts_channel.send(content=f"You can view this ticket here: https://mailhook.netlify.app/viewticket/{guild_id}/{randomly_generator_id}", file=discord.File(BytesIO(text.encode("utf-8")), filename=f"{channel.name}.txt"))

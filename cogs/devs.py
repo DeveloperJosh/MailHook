@@ -55,7 +55,7 @@ class Devs(commands.Cog):
     async def on_guild_join(self, guild: discord.Guild):
         text_to_send = f"""
 Hey there! Thanks a lot for inviting me!
-If you are a server admin then please visit https://mail-hook.site/setup/{guild.id} to setup this server.
+If you are a server admin then please visit https://mailhook.netlify.app/setup/{guild.id} to setup this server.
 
 If you face any issues, feel free to join our support server:
 - https://discord.gg/TeSHENet9M
