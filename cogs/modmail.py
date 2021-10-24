@@ -32,13 +32,13 @@ class Mailhook(commands.Cog, name="Mail Hook"):
             await self.bot.mongo.get_guild_data(ctx.guild.id)
             return await ctx.reply(embed=discord.Embed(
                 title=f"{self.bot.config.emojis.yes} Already Setup!",
-                description=f"Hey, looks like this server is already setup.\nPlease visit [**this link**](https://mailhook.netlify.app/servers/{ctx.guild.id}) to manage it.",
+                description=f"Hey, looks like this server is already setup.\nPlease visit [**this link**](https://mail-hook.xyz/servers/{ctx.guild.id}) to manage it.",
                 color=discord.Color.blurple()
             ))
         except NotSetup:
             pass
         if ctx.guild.id in self.bot.config.bot_lists:
-            return await ctx.reply(f"Please visit https://mailhook.netlify.app/setup/{ctx.guild.id} to set it up.")
+            return await ctx.reply(f"Please visit https://mail-hook.xyz/setup/{ctx.guild.id} to set it up.")
         final = {}
         main_msg = await ctx.reply(embed=discord.Embed(
             title=f"{self.bot.config.emojis.loading} Modmail setup!",
@@ -144,7 +144,7 @@ class Mailhook(commands.Cog, name="Mail Hook"):
             raise TicketCategoryNotFound()
         if staff_role not in ctx.author.roles:
             raise NotStaff()
-        embed = discord.Embed(color=discord.Color.blurple(), title="Modmail Configuration!", description=f"You can also view and edit these settings from the [**Dashboard**](https://mailhook.netlify.app/servers/{ctx.guild.id})")
+        embed = discord.Embed(color=discord.Color.blurple(), title="Modmail Configuration!", description=f"You can also view and edit these settings from the [**Dashboard**](https://mail-hook.xyz/servers/{ctx.guild.id})")
         embed.add_field(name="Staff Role:", value=staff_role.mention)
         embed.add_field(name="Transcript Channel:", value=transcript_channel.mention if transcript_channel is not None else "No transcript channel. [Not Recommended]")
         embed.add_field(name="Category:", value=category.name)
@@ -249,11 +249,11 @@ All your messages will be send to the staff team.
         embed = discord.Embed(
             title="Guild transcripts",
             color=discord.Color.blurple(),
-            description=f"This server has no transcripts.\nYou can also view the transcripts here: https://mailhook.netlify.app/transcripts/{ctx.guild.id}"
+            description=f"This server has no transcripts.\nYou can also view the transcripts here: https://mail-hook.xyz/transcripts/{ctx.guild.id}"
         )
         paginator = commands.Paginator(prefix="", suffix="")
         for num, transcript_id in enumerate(transcripts):
-            paginator.add_line(f"`{num}.` [{transcript_id}](https://mailhook.netlify.app/viewticket/{ctx.guild.id}/{transcript_id})")
+            paginator.add_line(f"`{num}.` [{transcript_id}](https://mail-hook.xyz/viewticket/{ctx.guild.id}/{transcript_id})")
         embeds = []
         for page in paginator.pages:
             embed.description = page
