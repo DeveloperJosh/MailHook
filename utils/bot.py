@@ -72,13 +72,15 @@ class ModMail(commands.AutoShardedBot):
 
     async def fetch_prefix(self, bot: ModMail, message: discord.Message) -> List[str]:
         prefixes = [f"<@{bot.user.id}> ", f"<@!{bot.user.id}> "]
+
         if message.guild is None:
-            prefixes.extend(self.config.prefixes)
+            prefixes.extend(self.config.prefixes.copy())
             return prefixes
-        data = await self.mongo.get_guild_data(message.guild.id, raise_error=False)
-        if data is None:
-            prefixes.extend(self.config.prefixes)
+
+        guild_prefixes = await self.mongo.get_prefixes(message.guild.id)
+        if not guild_prefixes:
+            prefixes.extend(self.config.prefixes.copy())
             return prefixes
-        guild_prefixes = data.get('prefixes', self.config.prefixes)
+
         prefixes.extend(guild_prefixes)
         return prefixes

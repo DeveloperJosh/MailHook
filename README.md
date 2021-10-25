@@ -79,6 +79,6 @@
 
 ## 🔗 Useful Links
 
-- [Dashboard](https://mail-hook.site)
+- [Dashboard](https://mail-hook.xyz/)
 - [Support Server](https://discord.gg/TeSHENet9M)
 - [Invite Me](https://discord.com/oauth2/authorize?client_id=781639675868872796&permissions=8&scope=bot%20applications.commands)

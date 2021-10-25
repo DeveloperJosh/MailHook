@@ -3,6 +3,7 @@ import asyncio
 import discord
 import hikari
 import aiohttp_cors
+import ast
 from typing import List
 from discord.ext import commands
 from utils.bot import ModMail
@@ -44,7 +45,7 @@ class WebServer(commands.Cog):
         self.rest_api = hikari.RESTApp()
         self.api = None
         self.BASE = "https://discord.com/api"
-        self.REDIRECT_URI = "https://mail-hook.site/callback"
+        self.REDIRECT_URI = "https://mail-hook.xyz/callback"
         # self.REDIRECT_URI = "http://localhost:3000/callback"
         self.cors_thing = {
             "*": aiohttp_cors.ResourceOptions(
@@ -155,6 +156,26 @@ class WebServer(commands.Cog):
         self.client.dispatch("mod_role_update", guild, role)
         return web.json_response({"success": True})
 
+    async def toggle_modping(self, request: web.Request):
+        susu = await request.json()
+        guild_id = susu.get("guild_id")
+        access_token = susu.get("access_token")
+        if guild_id is None or access_token is None:
+            raise web.HTTPBadRequest()
+        user = await self.get_user(access_token)
+        user_id = user.id
+        guild = self.client.get_guild(int(guild_id))
+        if guild is None:
+            return web.json_response({"error": "Guild not found"})
+        member = guild.get_member(int(user_id))
+        if member is None:
+            return web.json_response({"error": "Not authorized"})
+        if not member.guild_permissions.manage_guild:
+            return web.json_response({"error": "Not authorized"})
+        guild_data = await self.client.mongo.get_guild_data(guild_id=int(guild_id), raise_error=False)
+        await self.client.mongo.set_guild_data(guild_id=int(guild_id), ping_staff=not guild_data.get("ping_staff", True))
+        return web.json_response({"success": True})
+
     async def update_category(self, request: web.Request):
         susu = await request.json()
         category_id = susu.get("category_id")
@@ -233,6 +254,8 @@ class WebServer(commands.Cog):
         staff_role_id = request.headers.get("staff_role_id")
         category_id = request.headers.get("category_id")
         transcripts_id = request.headers.get("transcripts_id")
+        prefixes: List[str] = ast.literal_eval(request.headers.get("prefixes", "[]"))
+        prefixes = prefixes or self.client.config.prefixes.copy()
         access_token = request.headers.get("access_token")
         if guild_id is None or staff_role_id is None or category_id is None or transcripts_id is None or access_token is None:
             raise web.HTTPBadRequest()
@@ -278,7 +301,13 @@ class WebServer(commands.Cog):
             return web.json_response({"error": "I don't have permissions to send messages in the category."})
         if not transcripts.permissions_for(guild.me).read_messages or not transcripts.permissions_for(guild.me).send_messages:
             return web.json_response({"error": "I don't have permissions to read messages or send messages in the transcripts channel."})
-        await self.client.mongo.set_guild_data(guild.id, category=category.id, staff_role=staff_role.id, transcripts=transcripts.id)
+        await self.client.mongo.set_guild_data(
+            guild.id,
+            category=category.id,
+            staff_role=staff_role.id,
+            transcripts=transcripts.id,
+            prefixes=prefixes
+        )
         return web.json_response({"success": True, "message": "Guild setup complete." if guild.me.guild_permissions.administrator else "The guild setup is complete, it is recommended that you grant me administrator permissions for the best experience."})
 
     async def get_guild_data(self, request: web.Request):
@@ -286,7 +315,10 @@ class WebServer(commands.Cog):
         access_token = request.headers.get("access_token")
         if guild_id is None or access_token is None:
             raise web.HTTPBadRequest()
-        user = await self.get_user(access_token)
+        try:
+            user = await self.get_user(access_token)
+        except hikari.UnauthorizedError:
+            return web.json_response({"error": "Unauthorized"})
         user_id = user.id
         print(user_id, guild_id)
         try:
@@ -305,10 +337,33 @@ class WebServer(commands.Cog):
         guild_data = await self.client.mongo.get_guild_data(guild.id, raise_error=False)
         if guild_data is not None:
             modrole = guild.get_role(guild_data['staff_role'])
+            ping_staff = guild_data.get("ping_staff", True)
             ticket_category = guild.get_channel(guild_data['category'])
             transcripts_channel = guild.get_channel(guild_data['transcripts'])
+            guild_transcripts = [{
+                "ticketId": t_id,
+                "ticketUser": (lambda user: {
+                    "id": user.id if user is not None else t_data['user_id'],
+                    "username": user.name if user is not None else "Unknown User",
+                    "discriminator": str(user.discriminator) if user is not None else "0000",
+                    "avatar": user.display_avatar.url if user is not None else "https://cdn.discordapp.com/embed/avatars/0.png"
+                })(self.client.get_user(t_data['user_id'])),
+            } for t_id, t_data in guild_data.get('ticket_transcripts', {}).items()]
             current_tickets = await self.client.mongo.get_guild_modmail_threads(guild.id)
             prefixes = self.client.config.prefixes.copy()
+            templates = guild_data.get('templates', {})
+            ticket_open_message = guild_data.get('ticket_open_message', "{staff_role_mention} {user_mention} has opened a modmail thread.")
+            ticket_close_message = guild_data.get('ticket_close_message', "This modmail thread has been closed by {moderator_mention}")
+            staff_ticket_open_message = guild_data.get('staff_ticket_open_message', """
+Hey there, A modmail ticket has been started by a staff member.
+
+**Staff Member:** {moderator_mention}
+**Server:** {server}
+**Reason:** {reason}
+
+You can respond to this modmail ticket by messaging here
+All your messages will be send to the staff team.
+            """)
 
         return web.json_response({
             "id": str(guild.id),
@@ -345,6 +400,7 @@ class WebServer(commands.Cog):
                     "name": modrole.name,
                     "color": str(modrole.color),
                 } if modrole is not None else None,
+                "pingModRole": ping_staff,
                 "ticketCategory": {
                     "id": str(ticket_category.id),
                     "name": ticket_category.name,
@@ -356,9 +412,51 @@ class WebServer(commands.Cog):
                 "currentTickets": [{
                     "userId": str(ticket['_id']),
                     "channelId": str(ticket['channel_id'])
-                } for ticket in current_tickets]
+                } for ticket in current_tickets],
+                "guildTranscripts": guild_transcripts,
+                "templates": [{"name": temp_name, "description": template['description'], "content": template['content']} for temp_name, template in templates.items()],
+
+                "ticketOpenMessage": ticket_open_message,
+                "ticketCloseMessage": ticket_close_message,
+                "staffTicketOpenMessage": staff_ticket_open_message,
             } if guild_data is not None else None,
         })
+
+    async def update_ticket_message(self, request: web.Request):
+        guild_id = request.headers.get("guild_id")
+        access_token = request.headers.get("access_token")
+        message = request.headers.get("message")
+        message_type = request.headers.get("message_type")
+        if guild_id is None or access_token is None or message is None or message_type is None:
+            raise web.HTTPBadRequest()
+        try:
+            user = await self.get_user(access_token)
+        except hikari.UnauthorizedError:
+            return web.json_response({"error": "Unauthorized"})
+        user_id = user.id
+        print(user_id, guild_id)
+        try:
+            int(guild_id)
+            int(user_id)
+        except ValueError:
+            return web.json_response({"error": "Invalid guild id or user id"})
+        guild = self.client.get_guild(int(guild_id))
+        if guild is None:
+            return web.json_response({"error": "Guild not found"})
+        member = guild.get_member(int(user_id))
+        if member is None:
+            return web.json_response({"error": "Member not found"})
+        if not member.guild_permissions.manage_guild:
+            return web.json_response({"error": "Insufficient permissions"})
+        if message_type == "ticket_open_message":
+            await self.client.mongo.set_guild_data(guild.id, ticket_open_message=message)
+        elif message_type == "ticket_close_message":
+            await self.client.mongo.set_guild_data(guild.id, ticket_close_message=message)
+        elif message_type == "staff_ticket_open_message":
+            await self.client.mongo.set_guild_data(guild.id, staff_ticket_open_message=message)
+        else:
+            return web.json_response({"error": "Invalid message type"})
+        return web.json_response({"success": True})
 
     async def bot_stats(self, request: web.Request):
         return web.json_response({
@@ -479,6 +577,75 @@ class WebServer(commands.Cog):
             "html": final
         })
 
+    async def get_ticket_html_new(self, request: web.Request):
+        final = ""
+        default_avatar = "https://cdn.discordapp.com/embed/avatars/0.png"
+        guild_id = request.headers.get("guild_id")
+        ticket_id = request.headers.get("ticket_id")
+        access_token = request.headers.get("access_token")
+
+        def format_error(err: str) -> str:
+            return f"<h1 class='text-white font-bold text-center text-3xl'> ERROR: {err} </h1>"
+
+        if guild_id is None or ticket_id is None or access_token is None:
+            final = format_error("Missing guild_id or ticket_id in the URL OR missing access_token in the headers")
+            return web.json_response({"html": final})
+        try:
+            user = await self.get_user(access_token)
+        except hikari.UnauthorizedError:
+            return web.json_response({"html": format_error("Invalid access token in headers")})
+
+        try:
+            int(guild_id)
+        except ValueError:
+            final = format_error("Guild ID passed in the URL is not an integer")
+            return web.json_response({"html": final})
+
+        guild = self.client.get_guild(int(guild_id))
+        if guild is None:
+            return web.json_response({
+                "html": format_error("Invalid guild ID passed in the URL, unable to find guild.")
+            })
+
+        member = guild.get_member(int(user.id))
+        if member is None:
+            return web.json_response({
+                "html": format_error("You are not authorized to view tickets from this guild.")
+            })
+        ticket = await self.client.mongo.get_guild_ticket_transcript(int(guild_id), ticket_id)
+        if ticket is None:
+            return web.json_response({
+                "html": format_error("Invalid ticket ID passed in the URL, unable to find ticket.")
+            })
+        if ticket['user_id'] != member.id and not member.guild_permissions.manage_guild:
+            return web.json_response({
+                "html": format_error("You are not authorized to view this ticket from this guild.")
+            })
+
+        transcript_db = self.client.get_channel(self.client.config.transcript_db_channel)
+        ticket_message = await transcript_db.fetch_message(ticket['message_id'])
+        attachment = ticket_message.attachments[0]
+        bytes_data = await attachment.read()
+        text_data = bytes_data.decode()
+        for text_line in text_data.split("\n\n"):
+            lines = text_line.split(" | ", 3)
+            if len(lines) >= 3:
+                user_name = lines[0]
+                actual_message_content = lines[3]
+                actual_message_content = actual_message_content.replace("<", "&lt;").replace(">", "&gt;")
+                member_id = lines[1]
+                member = guild.get_member(int(member_id))
+                final += f"""
+                    <div class='discord-message flex'>
+                        <img class="rounded-full" height="50px" width="50px" src={member.display_avatar.url if member is not None else (default_avatar if len(user_name.split("#")) == 3 else (ticket_message.author.display_avatar.url if ticket_message.author is not None else default_avatar))} />
+                        <div class="author-and-message flex flex-col justify-center h-full">
+                            <h1 class="font-bold text-white text-xl">{member or user_name}</h1>
+                            <p class="text-white">{actual_message_content}</p>
+                        </div>
+                    </div>
+                """
+        return web.json_response({"html": final})
+
     async def start_server(self):
         app = web.Application()
         cors = aiohttp_cors.setup(app)
@@ -491,9 +658,12 @@ class WebServer(commands.Cog):
         setup_guild_resource = cors.add(app.router.add_resource("/setup_guild"))
         bot_stats_resource = cors.add(app.router.add_resource("/stats"))
         update_mod_role_resource = cors.add(app.router.add_resource("/update_mod_role"))
+        update_ping_staff_resource = cors.add(app.router.add_resource("/update_ping_staff"))
         update_category_resource = cors.add(app.router.add_resource("/update_category"))
         update_transcripts_resource = cors.add(app.router.add_resource("/update_transcripts"))
+        update_ticket_message_resource = cors.add(app.router.add_resource("/update_ticket_message"))
         get_ticket_html_resource = cors.add(app.router.add_resource("/get_ticket_html"))
+        get_ticket_html_new_resource = cors.add(app.router.add_resource("/get_ticket_html_new"))
         get_ticket_url_resource = cors.add(app.router.add_resource("/get_ticket_url"))
 
         cors.add(callback_resource.add_route("POST", self.callback), self.cors_thing)
@@ -504,9 +674,12 @@ class WebServer(commands.Cog):
         cors.add(setup_guild_resource.add_route("GET", self.setup_guild), self.cors_thing)
         cors.add(bot_stats_resource.add_route("GET", self.bot_stats), self.cors_thing)
         cors.add(update_mod_role_resource.add_route("POST", self.update_mod_role), self.cors_thing)
+        cors.add(update_ping_staff_resource.add_route("POST", self.toggle_modping), self.cors_thing)
         cors.add(update_category_resource.add_route("POST", self.update_category), self.cors_thing)
         cors.add(update_transcripts_resource.add_route("POST", self.update_transcript_channel), self.cors_thing)
+        cors.add(update_ticket_message_resource.add_route("GET", self.update_ticket_message), self.cors_thing)
         cors.add(get_ticket_html_resource.add_route("GET", self.get_ticket_html), self.cors_thing)
+        cors.add(get_ticket_html_new_resource.add_route("GET", self.get_ticket_html_new), self.cors_thing)
         cors.add(get_ticket_url_resource.add_route("GET", self.get_ticket_url), self.cors_thing)
 
         runner = web.AppRunner(app)

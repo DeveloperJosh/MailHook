@@ -41,9 +41,11 @@ class Devs(commands.Cog):
         channel = self.bot.get_channel(self.bot.config.logs.cmds)
         await channel.send(embed=discord.Embed(
             title="Command used:",
-            description=f"Command: `{ctx.command.name}`\nSlash?: {'True' if isinstance(ctx, InteractionContext) else 'False'}",
+            description=f"Command: `{ctx.message.content if isinstance(ctx, commands.Context) else ctx.command.name}`\nSlash?: {'True' if isinstance(ctx, InteractionContext) else 'False'}",
             color=discord.Color.blurple()
-        ).set_author(name=f"{ctx.author}", icon_url=ctx.author.display_avatar.url))
+        ).set_author(name=f"{ctx.author} | {ctx.author.id}", icon_url=ctx.author.display_avatar.url
+        ).add_field(name="Channel:", value=f"{ctx.channel.mention}\n#{ctx.channel.name} ({ctx.channel.id})"
+        ).add_field(name="Guild:", value=f"{ctx.guild.name}\n{ctx.guild.id}"))
 
     @commands.Cog.listener('on_app_command')
     async def slash_cmd_logs(self, ctx):
@@ -53,7 +55,7 @@ class Devs(commands.Cog):
     async def on_guild_join(self, guild: discord.Guild):
         text_to_send = f"""
 Hey there! Thanks a lot for inviting me!
-If you are a server admin then please visit https://mail-hook.site/setup/{guild.id} to setup this server.
+If you are a server admin then please visit https://mail-hook.xyz/setup/{guild.id} to setup this server.
 
 If you face any issues, feel free to join our support server:
 - https://discord.gg/TeSHENet9M
