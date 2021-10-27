@@ -2,9 +2,6 @@ name: "Request a Feature"
 description: "Suggest an idea for this bot"
 
 body:
-  - type: markdown
-  attributes:
-    value: "Thanks for taking the time to fill out a feature request."
   - type: input
     attributes:
       label: Is your feature request related to a problem?
