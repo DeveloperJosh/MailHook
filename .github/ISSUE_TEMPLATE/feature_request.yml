@@ -1,6 +1,6 @@
 name: "Request a Feature"
 description: "Suggest an idea for this bot"
-
+labels: feature request
 body:
   - type: input
     attributes:
