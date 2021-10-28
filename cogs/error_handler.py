@@ -107,7 +107,7 @@ class ErrorHandling(commands.Cog):
                 "This command cannot be used in DMs."
             ))
         else:
-            error_text = "".join(traceback.format_exception(etype=type(error), value=error, tb=error.__traceback__))[:4000]
+            error_text = "".join(traceback.format_exception(type(error), error, error.__traceback__))[:4000]
             print(error_text)
             try:
                 await ctx.channel.send(embed=e(
@@ -119,7 +119,7 @@ class ErrorHandling(commands.Cog):
             try:
                 await self.bot.get_channel(self.bot.config.logs.cmd_errs).send(embed=e("Unknown Error", f"```py\n{error_text}\n```"))
             except Exception:
-                traceback.print_exception(etype=type(error), value=error, tb=error.__traceback__)
+                traceback.print_exception(type(error), error, error.__traceback__)
 
     @commands.Cog.listener('on_app_command_error')
     async def on_app_command_error(self, ctx: InteractionContext, error):
