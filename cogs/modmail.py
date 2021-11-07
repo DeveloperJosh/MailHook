@@ -382,7 +382,7 @@ If you want to ignore a message you can start it with {' or '.join(['`' + p + '`
 
     @commands.command(name='anon-reply', help="Reply anonymously to a ticket.")
     @slash_command(name="anon-reply", help="Reply anonymously to a ticket.")
-    async def areply(self, ctx: InteractionContext, message: str):
+    async def areply(self, ctx: InteractionContext, *, message: str):
         if not ctx.guild:
             raise GuildOnlyPls()
         guild_data = await self.bot.mongo.get_guild_data(ctx.guild.id)
