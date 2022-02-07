@@ -63,10 +63,8 @@ class ModMail(commands.AutoShardedBot):
         print(f"Connected to: {len(self.private_channels)} private_channels")
 
     async def blacklist_check(self, ctx: commands.Context) -> bool:
-        if ctx.author.id in self.mongo.blacklist_cache:
-            return False
-        return True
-
+        return ctx.author.id not in self.mongo.blacklist_cache
+    
     async def connect_listener(self):
         await self.mongo.get_blacklist_cache()
 
