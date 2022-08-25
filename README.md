@@ -1,3 +1,6 @@
+## Movin to new modmail project
+[new modmail](https://github.com/DeveloperJosh/SynCraft-ModMail)
+
 <h1 align="center"> <img height="100px" src="https://cdn.discordapp.com/attachments/859335247547990026/900632166935961651/mailhook.png"> </h1>
 
 <h1 align="center"> MailHook </h1>
